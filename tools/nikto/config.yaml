@@ -1,0 +1,28 @@
+tool:
+  type: "dynamic"
+  scan_type: "web"
+  name: "nikto"
+  icon-sm:
+  icon-lg:
+  description: "Web server scanner which performs comprehensive tests against web servers for multiple items, including over 3500 potentially dangerous files/CGIs, versions on over 900 servers, and version specific problems on over 250 servers."
+  url: https://cirt.net/Nikto2
+  documentation: https://cirt.net/nikto2-docs/
+  docker: appsecpipeline/base
+  parameters: "URL : IP or URL of the site to scan."
+  pre:
+  exec: "nikto"
+  post:
+  profiles:
+    - all: "-h $URL"
+    - tuned: "-Tuning x 6 -h $URL"
+    - attack_types:
+        file_upload: "-Tuning 0 -h $URL"
+        misconfig: "-Tuning 2 -h $URL"
+        info: "-Tuning 3 -h $URL"
+        xss: "-Tuning 4 -h $URL"
+        remote: "-Tuning 57 -h $URL"
+        dos: "-Tuning 6 -h $URL"
+        command_exec: "-Tuning 8 -h $URL"
+        sqli: "-Tuning 9 -h $URL"
+        identification: "-Tuning b -h $URL"
+  report: "-output {timestamp}.csv"

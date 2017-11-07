@@ -1,0 +1,17 @@
+tool:
+  type: "static"
+  scan_type:
+  name: "cloc"
+  icon-sm:
+  icon-lg:
+  description: "cloc counts blank lines, comment lines, and physical lines of source code in many programming languages."
+  url: https://github.com/AlDanial/cloc
+  documentation: https://github.com/AlDanial/cloc
+  docker: appsecpipeline/base
+  parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
+  pre:
+  exec: "cloc"
+  post:
+  profiles:
+    - all: "$LOC --json"
+  report: "--report-file={timestamp}.json"
