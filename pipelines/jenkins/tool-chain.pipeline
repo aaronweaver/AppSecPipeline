@@ -1,0 +1,55 @@
+env.PROFILE = 'all'
+env.APP = 'testfire'
+env.PROD = 9
+env.PROFILE = 'all'
+env.URL = 'http://testfire.net/'
+env.DOJO = 'http://dojo:8080'
+
+node {
+        stage("Main build") {
+            def languages = readFile "$WORKSPACE/reports/cloc/cloc_2017-11-09-15-59-13_a63fe4fc-8a3b-4579-a2da-75d58c5078fc.json"
+
+            git url: 'https://github.com/aaronweaver/scanitall.git'
+
+            docker.image('appsecpipeline/base').inside('-u root') {
+            try {
+                  stage("Coding Languages") {
+                    sh 'launch.py -t cloc -p all -s static LOC="."'
+                    //sh 'cat reports/cloc/*.json'
+                  }
+                  echo "Languages from json"
+                  echo languages
+                  if (languages.contains("Python1")) {
+                      stage("Nikto") {
+                        sh 'launch.py -t nikto -s dynamic -p identification URL=$URL'
+                      }
+                  }
+                  if (languages.contains("Python")) {
+                      stage("bandit") {
+                        sh "launch.py -t bandit -s static -p $PROFILE LOC=${env.WORKSPACE}"
+                      }
+                  }
+                  stage("Arachni") {
+                        sh 'launch.py -t arachni -s dynamic -p fast URL=$URL'
+                  }
+                  stage("DefectDojo") {
+                      withCredentials([string(credentialsId: 'DOJO_API_KEY', variable: 'DOJO_API_KEY')])
+                      {
+                        sh "launch.py -t defectdojo -p all -s collector --api_key=$DOJO_API_KEY --user=admin --host=$DOJO --dir reports --product=$PROD"
+                      }
+                  }
+            }
+            finally {
+                junit '**/reports/*.xml'
+            }
+
+            }
+
+           // Clean up workspace
+           //step([$class: 'WsCleanup'])
+
+        }
+
+
+
+}

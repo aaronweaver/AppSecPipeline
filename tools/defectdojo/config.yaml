@@ -1,0 +1,23 @@
+tool:
+  version: AppSecPipeline 0.5.0
+  name: DefectDojo
+  tags:
+    - "Vulnerability Management"
+    - "Consumer"
+  type: "collector"
+  description: "DefectDojo is a security program and vulnerability management tool. DefectDojo allows you to manage your application security program, maintain product and application information, schedule scans, triage vulnerabilities and push findings into defect trackers. Consolidate your findings into one source of truth with DefectDojo."
+  docker: appsecpipeline/base
+  url: https://github.com/OWASP/django-DefectDojo
+  documentation: http://defectdojo.readthedocs.io/en/latest/
+  commands:
+    parameters: "dir : Directory of security tool output."
+    pre:
+    exec: "python /usr/bin/tools/defectdojo/dojo_ci_cd.py"
+    shell: True
+    post:
+    report:
+    reportname:
+    post:
+    junit:
+  profiles:
+    - all: "--proxy=$proxy --api_key=$api_key --user=$user --host=$host --product=$product  --dir reports"

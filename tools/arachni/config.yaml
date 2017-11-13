@@ -1,0 +1,33 @@
+tool:
+  version: AppSecPipeline 0.5.0
+  tags:
+    - "Dyanmic Scanner"
+  type: "dynamic"
+  scan_type: "web"
+  name: "arachni"
+  icon-sm:
+  icon-lg:
+  description: "Arachni is a feature-full, modular, high-performance Ruby framework aimed towards helping penetration testers and administrators evaluate the security of modern web applications."
+  url: http://www.arachni-scanner.com/
+  documentation: https://github.com/Arachni/arachni/wiki/Command-line-user-interface
+  docker: appsecpipeline/base
+  parameters: "URL : URL of the site to scan."
+  commands:
+    pre:
+    exec: "arachni"
+    shell: True
+    report: "--report-save-path={reportname}"
+    reportname: "{timestamp}.afr"
+    post: "arachni_reporter {reportname} --reporter=json:outfile={reportname}.json"
+    junit:
+  profiles:
+    - all: "$URL"
+    - active: "$URL --checks=active/*"
+    - passive: "$URL --checks=passive/*"
+    - fast: "$URL --audit-forms --checks=xss --scope-page-limit=1"
+    - attack_types:
+        file_upload: "$URL --checks=form_upload"
+        xss: "$URL  --checks=xss"
+        remote: "$URL --checks=file_inclusion"
+        command_exec: "$URL --checks=os_cmd_injection"
+        sqli: "$URL --checks=sql_injection"

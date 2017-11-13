@@ -18,6 +18,8 @@ from datetime import datetime
 baseLocation = "/usr/bin/"
 reportsDir = "reports/"
 
+#Allow for dynamic arguments to support a wide variety of tools
+#Format URL=Value, YAML Definition for substitution $URL
 def substituteArgs(args, command):
     for arg in args:
         env = arg.split("=")
@@ -25,8 +27,19 @@ def substituteArgs(args, command):
             name = env[0]
             value = env[1]
             #Replace values if those values exist in the command
-            if name in command:
+            """
+            print "name"
+            print name.lower()
+            print "value"
+            print value
+            print "Command"
+            print command.lower()
+            """
+            if name.lower() in command.lower():
+                name = name.replace("--","")
+                name = name.replace("-","")
                 command = command.replace("$" + name, value)
+                #print "Command replaced: " + command
     return command
 
 def slugify(s):
@@ -44,18 +57,21 @@ def reportName(toolName, reportString):
 
     #Add the folder path and datetimestamps
     #toolName/toolName_2017-11-02-1-05-04.csv
-    filename = tool["report"].replace("{timestamp}", reportsDir + toolName + "/" + toolName + "_" + datestring + "_" + str(uuid.uuid4()))
+    filename = reportString.replace("{timestamp}", os.getcwd() + "/" + reportsDir + toolName + "/" + toolName + "_" + datestring + "_" + str(uuid.uuid4()))
 
     return filename
 
 def checkFolderPath(toolName):
-    #Create a directory to store the reports
+    #Create a directory to store the reports / junit
     folderName = slugify(toolName)
     if not os.path.exists(reportsDir):
         os.mkdir(reportsDir)
 
     if not os.path.exists(reportsDir + folderName):
         os.mkdir(reportsDir + folderName)
+
+    if not os.path.exists(reportsDir + folderName + "/junit"):
+        os.mkdir(reportsDir + folderName + "/junit")
 
 def getYamlConfig(toolName):
     #Expecting config file in tools/toolname/config.yaml
@@ -82,13 +98,14 @@ if __name__ == '__main__':
 
     with open(yamlConfig, 'r') as stream:
         try:
-            config = yaml.load(stream)
+            config = yaml.safe_load(stream)
             launchCmd = None
             report = None
             scan_type = None
             profile_run = None
             profile_found = False
             test_mode = False
+            fullReportName = None
 
             if args.scan_type:
                 scan_type = args.scan_type
@@ -101,6 +118,8 @@ if __name__ == '__main__':
 
             #Set the object to the tool yaml section
             tool = config["tool"]
+            #Tooling commands
+            commands = tool["commands"]
 
             #Only run the tool if setting is for that kind of security tool: example: dynamic/static
             if tool["type"] == scan_type:
@@ -119,32 +138,60 @@ if __name__ == '__main__':
 
                 #Launch only if command exists
                 if profile_found and launchCmd:
-                    #Execute a pre-commmand, such as a setup or update requirement
-                    if tool["pre"] is not None:
-                        if not test_mode:
-                            call(shlex.split(tool["pre"]))
+                    if commands["report"] is not None:
+                        fullReportName = reportName(slugify(tool["name"]), commands["reportname"])
+                        launchCmd = launchCmd + " " + commands["report"].replace("{reportname}", fullReportName)
 
-                    if tool["report"] is not None:
-                        launchCmd = launchCmd + " " + reportName(slugify(tool["name"]), tool["report"])
-
+                    #Only launch command if a launch command is specified
+                    #Pre and post require a launch command
                     if launchCmd:
+                        #Execute a pre-commmand, such as a setup or update requirement
+                        if commands["pre"] is not None:
+                            if not test_mode:
+                                call(shlex.split(commands["pre"]))
+
                         #Create a directory to store the reports
                         checkFolderPath(tool["name"])
-                        launchCmd = tool["exec"] + " " + launchCmd
+                        launchCmd = commands["exec"] + " " + launchCmd
                         #Substitute any environment variables
                         launchCmd = substituteArgs(remaining_argv, launchCmd)
                         print "*****************************"
                         print "Launch: " + launchCmd
                         print "*****************************"
                         if not test_mode:
-                            call(shlex.split(launchCmd))
+                            if "shell" in commands:
+                                if commands["shell"] == True:
+                                    print "Using shell call"
+                                    call(launchCmd, shell=True)
+                                else:
+                                    call(shlex.split(launchCmd))
+                            else:
+                                call(shlex.split(launchCmd))
 
-                    #Execute a pre-commmand, such as a setup or update requirement
-                    if tool["post"] is not None:
-                        if not test_mode:
-                            call(shlex.split(tool["post"]))
+                        #Execute a pre-commmand, such as a setup or update requirement
+                        if commands["post"] is not None:
+                            #Look into making this more flexible with dynamic substitution
+                            postCmd = commands["post"]
+                            postCmd = postCmd.replace("{reportname}", fullReportName)
+                            print "*****************************"
+                            print "Post Command: " + postCmd
+                            print "*****************************"
+                            if not test_mode:
+                                #review and see what other options we have
+                                call(postCmd, shell=True)
+                                #call(shlex.split(postCmd))
+                                if commands["junit"] is not None:
+                                    #Look into making this more flexible with dynamic substitution
+                                    junitCmd = commands["junit"]
+                                    junitCmd = junitCmd.replace("{reportname}", fullReportName)
+                                    print "*****************************"
+                                    print "Junit Command: " + junitCmd
+                                    print "*****************************"
+                                    if not test_mode:
+                                        #review and see what other options we have
+                                        call(shlex.split(junitCmd))
                 else:
-                    print "Profile or command to run not found in configuration file."
+                    print "Profile or command to run not found in Yaml configuration file."
             else:
                 print "No profile or scan type found."
 

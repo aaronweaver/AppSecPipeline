@@ -10,16 +10,37 @@ RUN apt-get update \
     git \
     python-pip \
     python2.7 \
-    python2.7-dev
+    python2.7-dev \
+    csvtool
 
 RUN apt-get install -y \
     nikto \
-    cloc
+    cloc \
+    unzip
 
+#Python dependency installs
 RUN pip install -U pyyaml
+RUN pip install -U bandit
+RUN pip install -U junit_xml_output
+RUN pip install defectdojo_api
 
 #Copy pipeline executor to bin
 COPY controller/launch.py /usr/bin/
+COPY controller/junit.py /usr/bin/
 COPY tools /usr/bin/tools
 
 RUN chmod +x /usr/bin/launch.py
+RUN chmod +x /usr/bin/junit.py
+
+#Install Arachni, packaged apt-get install arachni doesn't work for some reason
+ARG VERSION=1.5.1
+ARG WEB_VERSION=0.5.12
+
+RUN mkdir /usr/share/arachni && \
+          wget -qO- https://github.com/Arachni/arachni/releases/download/v${VERSION}/arachni-${VERSION}-${WEB_VERSION}-linux-x86_64.tar.gz | tar xvz -C /usr/share/arachni --strip-components=1
+
+RUN echo '#!/bin/bash\n\ncd /usr/share/arachni/bin/ && ./arachni "$@"' > /usr/bin/arachni
+RUN echo '#!/bin/bash\n\ncd /usr/share/arachni/bin/ && ./arachni_reporter "$@"' > /usr/bin/arachni_reporter
+
+RUN chmod +x /usr/bin/arachni
+RUN chmod +x /usr/bin/arachni_reporter
