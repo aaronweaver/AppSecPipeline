@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<testsuite failures="1" name="bandit" tests="1">
+	<testcase name="blacklist">
+		<failure>Using cElementTree to parse untrusted XML data is known to be vulnerable to XML attacks. Replace cElementTree with the equivalent defusedxml package, or make sure defusedxml.defuse_stdlib() is called. Filename: /var/jenkins_home/workspace/groovy/PyBitBucket.py Line number: 6 Line range: [6, 7, 8, 9] Issue Confidence: HIGH</failure>
+	</testcase>
+</testsuite>

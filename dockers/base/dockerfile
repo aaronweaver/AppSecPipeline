@@ -11,7 +11,8 @@ RUN apt-get update \
     python-pip \
     python2.7 \
     python2.7-dev \
-    csvtool
+    csvtool \
+    openjdk-9-jre-headless
 
 RUN apt-get install -y \
     nikto \
@@ -21,6 +22,7 @@ RUN apt-get install -y \
 #Python dependency installs
 RUN pip install -U pyyaml
 RUN pip install -U bandit
+RUN pip install -U requests
 RUN pip install -U junit_xml_output
 RUN pip install defectdojo_api
 
@@ -32,15 +34,21 @@ COPY tools /usr/bin/tools
 RUN chmod +x /usr/bin/launch.py
 RUN chmod +x /usr/bin/junit.py
 
-#Install Arachni, packaged apt-get install arachni doesn't work for some reason
+RUN useradd -o -u 1000 jenkins
+
+#Install Arachni, packaged apt-get install arachni doesn't work for some reason, hangs on BrowserCluster
 ARG VERSION=1.5.1
 ARG WEB_VERSION=0.5.12
 
-RUN mkdir /usr/share/arachni && \
-          wget -qO- https://github.com/Arachni/arachni/releases/download/v${VERSION}/arachni-${VERSION}-${WEB_VERSION}-linux-x86_64.tar.gz | tar xvz -C /usr/share/arachni --strip-components=1
+#RUN mkdir /usr/share/arachni && \
+#          wget -qO- https://github.com/Arachni/arachni/releases/download/v${VERSION}/arachni-${VERSION}-${WEB_VERSION}-linux-x86_64.tar.gz | tar xvz -C /usr/share/arachni --strip-components=1
 
-RUN echo '#!/bin/bash\n\ncd /usr/share/arachni/bin/ && ./arachni "$@"' > /usr/bin/arachni
-RUN echo '#!/bin/bash\n\ncd /usr/share/arachni/bin/ && ./arachni_reporter "$@"' > /usr/bin/arachni_reporter
+#RUN echo '#!/bin/bash\n\ncd /usr/share/arachni/bin/ && ./arachni "$@"' > /usr/bin/arachni
+#RUN echo '#!/bin/bash\n\ncd /usr/share/arachni/bin/ && ./arachni_reporter "$@"' > /usr/bin/arachni_reporter
 
-RUN chmod +x /usr/bin/arachni
-RUN chmod +x /usr/bin/arachni_reporter
+#RUN chmod +x /usr/bin/arachni
+#RUN chmod +x /usr/bin/arachni_reporter
+
+#ADD dockers/base/binaries/arachni-1.5.1-0.5.12-linux-i686.tar.gz /tmp/
+#RUN mkdir /usr/share/arachni
+#RUN mv /tmp/arachni-1.5.1-0.5.12/* /usr/share/arachni/

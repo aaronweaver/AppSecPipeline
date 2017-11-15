@@ -19,24 +19,21 @@ def junit(toolName, file):
 
     junit_xml = junit_xml_output.JunitXml(toolName, test_cases, total_tests=None, total_failures=None)
     with open(file, 'w') as file:
-        print "\nWriting Junit test files"
+        print "\nWriting Junit test file: junit_dojo.xml"
         file.write(junit_xml.dump())
 
 def dojo_connection(host, api_key, user, proxy=None):
-    #Optionally, specify a proxy
-    if proxy is None:
-        proxy = "localhost:8080"
 
-    proxies = {
-      'http': 'http://' + proxy,
-      'https': 'http://' + proxy,
-    }
-    #proxies=proxies,
-    #if DEBUG:
+    if proxy is not None:
+        proxies = {
+          'http': 'http://' + proxy,
+          'https': 'http://' + proxy,
+        }
+
         # Instantiate the DefectDojo api wrapper
-    dd = defectdojo.DefectDojoAPI(host, api_key, user, proxies=proxies, verify_ssl=False, timeout=360, debug=False)
-    #else:
-    #    dd = defectdojo.DefectDojoAPI(host, api_key, user, verify_ssl=False, timeout=360, debug=False)
+        dd = defectdojo.DefectDojoAPI(host, api_key, user, proxies=proxies, verify_ssl=False, timeout=360, debug=False)
+    else:
+        dd = defectdojo.DefectDojoAPI(host, api_key, user, verify_ssl=False, timeout=360, debug=False)
 
     return dd
     # Workflow as follows:
@@ -57,8 +54,10 @@ def return_engagement(dd, product_id, user):
         for engagement in engagements.data["objects"]:
             if "Recurring CI/CD Integration" == engagement['name']:
                 engagement_id = engagement['id']
+    else:
+        print "An error occurred: " + engagements.message
 
-    if engagement_id == None:
+    if engagements.success and engagement_id == None:
         start_date = datetime.now()
         end_date = start_date+timedelta(days=180)
         users = dd.list_users(user)
@@ -69,6 +68,7 @@ def return_engagement(dd, product_id, user):
 
         engagement_id = dd.create_engagement("Recurring CI/CD Integration", product_id, str(user_id),
         "In Progress", start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
+
     return engagement_id
 
 def process_findings(dd, engagement_id, dir, build=None):
@@ -76,9 +76,14 @@ def process_findings(dd, engagement_id, dir, build=None):
     for root, dirs, files in os.walk(dir):
         for name in files:
             file = os.path.join(os.getcwd(),root, name)
-            test_id = processFiles(dd, engagement_id, file)
-            if test_id is not None:
-                test_ids.append(str(test_id))
+            #Test for file extension
+            if file.lower().endswith(('.json', '.csv','.txt','.js', '.xml')):
+                test_id = processFiles(dd, engagement_id, file)
+                #Test id's accumulated to query later to find out what was found in this build
+                if test_id is not None:
+                    test_ids.append(str(test_id))
+            else:
+                print "Skipped file, extension not supported: " + file + "\n"
     return ','.join(test_ids)
 
 def processFiles(dd, engagement_id, file, scanner=None, build=None):
@@ -96,12 +101,12 @@ def processFiles(dd, engagement_id, file, scanner=None, build=None):
     #Tools without an importer in Dojo; attempted to import as generic
     if "generic" in name:
         scanner = "Generic Findings Import"
-        if tool == "nikto":
-            print "Uploading nikto scan: " + file
-            test_id = dd.upload_scan(engagement_id, scanner, file, "true", dojoDate, build)
-        elif tool == "bandit":
-            print "Uploading bandit scan: " + file
-            test_id = dd.upload_scan(engagement_id, scanner, file, "true", dojoDate, build)
+        print "Uploading " + tool + " scan: " + file
+        test_id = dd.upload_scan(engagement_id, scanner, file, "true", dojoDate, build)
+        if test_id.success == False:
+            print "An error occured while uploading the scan: " + test_id.message + "\n"
+        else:
+            print "Succesful upload, TestID: " + str(test_id) + "\n"
     else:
         if tool == "burp":
             scannerName = "Burp Scan"
@@ -141,9 +146,12 @@ def processFiles(dd, engagement_id, file, scanner=None, build=None):
         if scannerName is not None:
             print "Uploading " + scannerName + " scan: " + file
             test_id = dd.upload_scan(engagement_id, scannerName, file, "true", dojoDate, build)
+            if test_id.success == False:
+                print "An error occured while uploading the scan: " + test_id.message
+            else:
+                print "Succesful upload, TestID: " + str(test_id)
 
     return test_id
-    #print os.path.basename(full_path)
 
 def create_findings(dd, engagement_id, scanner, file, build=None):
     # Upload the scanner export
@@ -161,56 +169,68 @@ def create_findings(dd, engagement_id, scanner, file, build=None):
 
 def summary(dd, engagement_id, test_ids, max_critical=0, max_high=0, max_medium=0):
         findings = dd.list_findings(engagement_id_in=engagement_id, duplicate="false", active="true", verified="true")
-        print"=============================================="
-        print "Total Number of Vulnerabilities: " + str(findings.data["meta"]["total_count"])
-        print"=============================================="
-        print_findings(sum_severity(findings))
-        print
+        if findings.success:
+            print"=============================================="
+            print "Total Number of Vulnerabilities: " + str(findings.data["meta"]["total_count"])
+            print"=============================================="
+            print_findings(sum_severity(findings))
+            print
+        else:
+            print "An error occurred: " + findings.message
+
         findings = dd.list_findings(test_id_in=test_ids, duplicate="true")
-        print"=============================================="
-        print "Total Number of Duplicate Findings: " + str(findings.data["meta"]["total_count"])
-        print"=============================================="
-        print_findings(sum_severity(findings))
-        print
-        #Delay while de-dupes
-        sys.stdout.write("Sleeping for 30 seconds to wait for dedupe celery process:")
-        sys.stdout.flush()
-        for i in range(15):
-            time.sleep(2)
-            sys.stdout.write(".")
+
+        if findings.success:
+            print"=============================================="
+            print "Total Number of Duplicate Findings: " + str(findings.data["meta"]["total_count"])
+            print"=============================================="
+            print_findings(sum_severity(findings))
+            print
+            #Delay while de-dupes
+            sys.stdout.write("Sleeping for 30 seconds to wait for dedupe celery process:")
             sys.stdout.flush()
+            for i in range(15):
+                time.sleep(2)
+                sys.stdout.write(".")
+                sys.stdout.flush()
+        else:
+            print "An error occurred: " + findings.message
 
         findings = dd.list_findings(test_id_in=test_ids, duplicate="false", limit=500)
-        if findings.count() > 0:
-            for finding in findings.data["objects"]:
-                test_cases.append(junit_xml_output.TestCase(finding["title"] + " Severity: " + finding["severity"], finding["description"],"failure"))
-            if not os.path.exists("reports"):
-                os.mkdir("reports")
-            junit("DefectDojo", "reports/junit_dojo.xml")
 
-        print"\n=============================================="
-        print "Total Number of New Findings: " + str(findings.data["meta"]["total_count"])
-        print"=============================================="
-        sum_new_findings = sum_severity(findings)
-        print_findings(sum_new_findings)
-        print
-        print"=============================================="
+        if findings.success:
+            if findings.count() > 0:
+                for finding in findings.data["objects"]:
+                    test_cases.append(junit_xml_output.TestCase(finding["title"] + " Severity: " + finding["severity"], finding["description"],"failure"))
+                if not os.path.exists("reports"):
+                    os.mkdir("reports")
+                junit("DefectDojo", "reports/junit_dojo.xml")
 
-        strFail = ""
-        if max_critical is not None:
-            if sum_new_findings[4] > max_critical:
-                strFail =  "Build Failed: Max Critical"
-        if max_high is not None:
-            if sum_new_findings[3] > max_high:
-                strFail = strFail +  " Max High"
-        if max_medium is not None:
-            if sum_new_findings[2] > max_medium:
-                strFail = strFail +  " Max Medium"
-        if strFail is None:
-            print "Build Passed!"
+            print"\n=============================================="
+            print "Total Number of New Findings: " + str(findings.data["meta"]["total_count"])
+            print"=============================================="
+            sum_new_findings = sum_severity(findings)
+            print_findings(sum_new_findings)
+            print
+            print"=============================================="
+
+            strFail = ""
+            if max_critical is not None:
+                if sum_new_findings[4] > max_critical:
+                    strFail =  "Build Failed: Max Critical"
+            if max_high is not None:
+                if sum_new_findings[3] > max_high:
+                    strFail = strFail +  " Max High"
+            if max_medium is not None:
+                if sum_new_findings[2] > max_medium:
+                    strFail = strFail +  " Max Medium"
+            if strFail is None:
+                print "Build Passed!"
+            else:
+                print "Build Failed: " + strFail
+            print"=============================================="
         else:
-            print "Build Failed: " + strFail
-        print"=============================================="
+            print "An error occurred: " + findings.message
 
 def sum_severity(findings):
     severity = [0,0,0,0,0]
@@ -239,8 +259,7 @@ class Main:
     if __name__ == "__main__":
         parser = argparse.ArgumentParser(description='CI/CD integration for DefectDojo')
         parser.add_argument('--host', help="Dojo Hostname", required=True)
-        parser.add_argument('--api_key', help="API Key", required=True)
-        parser.add_argument('--user', help="User", required=True)
+        parser.add_argument('--api_key', help="API Key: user:guidvalue", required=True)
         parser.add_argument('--product', help="Dojo Product ID", required=True)
         parser.add_argument('--file', help="Scanner file", required=False)
         parser.add_argument('--dir', help="Scanner directory, needs to have the scanner name with the scan file in the folder. Ex: reports/nmap/nmap.csv", required=False)
@@ -256,7 +275,7 @@ class Main:
         args = vars(parser.parse_args())
         host = args["host"]
         api_key = args["api_key"]
-        user = args["user"]
+
         product_id = args["product"]
         file = args["file"]
         dir = args["dir"]
@@ -269,6 +288,9 @@ class Main:
         proxy = args["proxy"]
 
         if dir is not None or file is not None:
+            apiParsed = api_key.split(':')
+            user = apiParsed[0]
+            api_key = apiParsed[1]
             dd = dojo_connection(host, api_key, user, proxy)
             engagement_id = return_engagement(dd, product_id, user)
             test_ids = None

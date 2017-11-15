@@ -1,0 +1,2 @@
+filename,test_name,test_id,issue_severity,issue_confidence,issue_text,line_number,line_range
+/var/jenkins_home/workspace/groovy/PyBitBucket.py,blacklist,B405,LOW,HIGH,"Using cElementTree to parse untrusted XML data is known to be vulnerable to XML attacks. Replace cElementTree with the equivalent defusedxml package, or make sure defusedxml.defuse_stdlib() is called.",6,"[6, 7, 8, 9]"

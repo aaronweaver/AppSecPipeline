@@ -36,8 +36,12 @@ def substituteArgs(args, command):
             print command.lower()
             """
             if name.lower() in command.lower():
-                name = name.replace("--","")
-                name = name.replace("-","")
+                if name.startswith('--'):
+                    name = name.replace("--","", 1)
+
+                if name.startswith('-'):
+                    name = name.replace("-","", 1)
+
                 command = command.replace("$" + name, value)
                 #print "Command replaced: " + command
     return command
@@ -53,11 +57,16 @@ def slugify(s):
 
 def reportName(toolName, reportString):
     filename = None
-    datestring = datetime.strftime(datetime.now(), '%Y-%m-%d-%H-%M-%S')
+    basePath = os.path.join(os.getcwd(),reportsDir,toolName)
 
-    #Add the folder path and datetimestamps
-    #toolName/toolName_2017-11-02-1-05-04.csv
-    filename = reportString.replace("{timestamp}", os.getcwd() + "/" + reportsDir + toolName + "/" + toolName + "_" + datestring + "_" + str(uuid.uuid4()))
+    if "{timestamp}" in reportString:
+        #Add the folder path and datetimestamps
+        #toolName/toolName_2017-11-02-1-05-04.csv
+        datestring = datetime.strftime(datetime.now(), '%Y-%m-%d-%H-%M-%S')
+        filename = reportString.replace("{timestamp}", os.path.join(basePath, toolName + "_" + datestring + "_" + str(uuid.uuid4())))
+    else:
+        #If the filename is a static name
+        filename = os.path.join(basePath,reportString)
 
     return filename
 

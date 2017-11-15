@@ -1,0 +1,5 @@
+Date,Title,CweId,Url,Severity,Description,Mitigation,Impact,References,Active,Verified,FalsePositive,Duplicate
+11/09/2017,IP address found in the 'server' header.,0,http://198.252.230.64/,Low,"IP address found in the 'server' header. The IP is ""1.11.2.1"".",,,,False,False,False,False
+11/09/2017,The anti-clickjacking X-Frame-Options header is not present.,0,http://198.252.230.64/,Low,The anti-clickjacking X-Frame-Options header is not present.,,,,False,False,False,False
+11/09/2017,The X-XSS-Protection header is not defined.,0,http://198.252.230.64/,Low,The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS,,,,False,False,False,False
+11/09/2017,The X-Content-Type-Options header is not set.,0,http://198.252.230.64/,Low,The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type,,,,False,False,False,False

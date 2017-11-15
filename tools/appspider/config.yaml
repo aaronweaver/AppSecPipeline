@@ -1,0 +1,36 @@
+tool:
+  version: AppSecPipeline 0.5.0
+  tags:
+    - "Dyanmic Scanner"
+  type: "dynamic"
+  scan_type: "web"
+  name: "appspider"
+  icon-sm:
+  icon-lg:
+  description: "AppSpider automatically finds vulnerabilities across a wide range of applications—
+from the relatively simple to the most complex—and it includes unique capabilities
+that enable teams to automate more of the security testing program across the
+entire software development lifecycle, from creation through production."
+  url: https://www.rapid7.com/products/appspider/
+  documentation: https://appspider.help.rapid7.com/docs/
+  docker: appsecpipeline/base
+  parameters: "URL : URL of the site to scan."
+  commands:
+    pre:
+    exec: "python /usr/bin/tools/appspider/AppSpider.py --url $url --username $username --password $password --admin-username $admin-username --admin-password $admin-password --client $client"
+    shell: False
+    report: "--output-file='{reportname}'"
+    reportname: "VulnerabilitiesSummary.xml"
+    post:
+    junit:
+  profiles:
+    - all: "--run-scan-poll $run-scan-poll"
+    - active: "$URL --checks=active/*"
+    - passive: "$URL --checks=passive/*"
+    - fast: "$URL --audit-forms --checks=xss --scope-page-limit=1"
+    - attack_types:
+        file_upload: "$URL --checks=form_upload"
+        xss: "$URL  --checks=xss"
+        remote: "$URL --checks=file_inclusion"
+        command_exec: "$URL --checks=os_cmd_injection"
+        sqli: "$URL --checks=sql_injection"
