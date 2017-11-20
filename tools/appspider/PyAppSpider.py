@@ -69,14 +69,17 @@ class PyAppSpider(object):
 
         response = self._request('POST', 'Authentication/Login', data=params)
 
-        self.success = response.data["IsSuccess"]
-
-        if self.success:
-            self.token = response.data["Token"]
-            self.loginCode = 1 #Authenticated
-        elif response.data["Reason"] == "Invalid clientId":
-            self.clients = response.data["Clients"]
-            self.loginCode = 2 #Authenticated but need to select a client id
+        if response.success:
+            self.success = response.data["IsSuccess"]
+            if self.success:
+                self.token = response.data["Token"]
+                self.loginCode = 1 #Authenticated
+            elif response.data["Reason"] == "Invalid clientId":
+                self.clients = response.data["Clients"]
+                self.loginCode = 2 #Authenticated but need to select a client id
+        else:
+            #Connection error or bad login
+            self.success = False
 
         return response
 
@@ -751,17 +754,17 @@ class PyAppSpider(object):
                 else:
                     data = response.json()
                     return AppSpiderResponse(message="Success", data=data, success=True, response_code=response.status_code)
-            except ValueError:
-                return AppSpiderResponse(message='JSON response could not be decoded.', success=False)
-        except requests.exceptions.SSLError:
-            return AppSpiderResponse(message='An SSL error occurred.', success=False)
-        except requests.exceptions.ConnectionError:
-            return AppSpiderResponse(message='A connection error occurred.', success=False)
-        except requests.exceptions.Timeout:
+            except ValueError as e:
+                return AppSpiderResponse(message='JSON response could not be decoded. Detailed error: ' + str(e), success=False)
+        except requests.exceptions.SSLError as e:
+            return AppSpiderResponse(message='An SSL error occurred. Detailed error: ' + str(e), success=False)
+        except requests.exceptions.ConnectionError as e:
+            return AppSpiderResponse(message=str(e) + 'A connection error occurred. Detailed error: ' + str(e), success=False)
+        except requests.exceptions.Timeout as e:
             return AppSpiderResponse(message='The request timed out after ' + str(self.timeout) + ' seconds.',
                                      success=False)
-        except requests.exceptions.RequestException:
-            return AppSpiderResponse(message='There was an error while handling the request.', success=False)
+        except requests.exceptions.RequestException as e:
+            return AppSpiderResponse(message='There was an error while handling the request. Detailed error: ' + str(e), success=False)
 
 
 class AppSpiderResponse(object):
@@ -807,7 +810,13 @@ class AppSpiderResponse(object):
         return data
 
     def error(self):
-        return self.data["ErrorMessage"]
+        errorMessage = self.message
+
+        if self.data is not None:
+            if "ErrorMessage" in self.data:
+                self.data["ErrorMessage"]
+
+        return errorMessage
 
     def data_json(self, pretty=False):
         """Returns the data as a valid JSON string."""

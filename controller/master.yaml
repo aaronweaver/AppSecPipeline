@@ -1,0 +1,19 @@
+version: AppSecPipeline 0.5.0
+
+#Profile definition of what tools to run for a particular profile
+profile:
+  fast:
+    tools:
+      - Nikto
+      - Arachni
+      - bandit
+  checkin:
+    tools:
+      - bandit
+        profiles:
+          - custom: "-lll -r $LOC/*.py"
+
+#Define which profile to run based off of a code checkin
+deployment:
+  master: fast
+  devel: checkin

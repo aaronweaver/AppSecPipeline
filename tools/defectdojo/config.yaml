@@ -13,7 +13,7 @@ tool:
     parameters: "dir : Directory of security tool output."
     pre:
     exec: "python /usr/bin/tools/defectdojo/dojo_ci_cd.py"
-    shell: True
+    shell: False
     post:
     report:
     reportname:
@@ -21,4 +21,4 @@ tool:
     junit:
   profiles:
     - all: "--api_key=$api_key --host=$host --product=$product  --dir reports"
-    - all_proxy: "--proxy=$proxy --api_key=$api_key --host=$host --product=$product  --dir reports"
+    - all_proxy: "--proxy=$proxy --api_key=$api_key --host=$host --product=$product  --dir reports"                        

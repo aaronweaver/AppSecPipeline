@@ -30,14 +30,19 @@ if __name__ == '__main__':
     base = os.path.basename(args.file)
     fileName = os.path.join(os.path.dirname(args.file), "generic_" + os.path.splitext(base)[0] + ".csv")
     csvToParse = fileName
-    with open(csvToParse, 'rb') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
-        first = True
-        for row in reader:
-            if first:
-                first = False
-            else:
-                #Output a junit test file, should lows/med be condsider a failure?
-                test_cases.append(junit_xml_output.TestCase(row[TITLE], row[DESCRIPTION],"failure"))
 
-    junit(args.tool, os.path.join(os.path.dirname(args.file), "junit", "junit_" + os.path.splitext(base)[0] + ".xml"))
+    #Test for file
+    if os.path.isfile("csvToParse"):
+        with open(csvToParse, 'rb') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            first = True
+            for row in reader:
+                if first:
+                    first = False
+                else:
+                    #Output a junit test file, should lows/med be condsider a failure?
+                    test_cases.append(junit_xml_output.TestCase(row[TITLE], row[DESCRIPTION],"failure"))
+
+        junit(args.tool, os.path.join(os.path.dirname(args.file), "junit", "junit_" + os.path.splitext(base)[0] + ".xml"))
+    else:
+        print "File passed in doesn't exist."

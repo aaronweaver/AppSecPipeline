@@ -1,0 +1,45 @@
+class AppSecPipeline {
+    String name
+    String command
+
+    AppSecPipeline(name, command) {
+        this.name = name
+        this.command = command
+    }
+}
+
+def nikto = new AppSecPipeline("nikto", "launch.py -t nikto -s dynamic -p $PROFILE URL=$params.URL")
+def arachni = new AppSecPipeline("arachni", "launch.py -t arachni -s dynamic -p $PROFILE URL=$params.URL")
+
+def stepsForParallel = [:]
+stepsForParallel[nikto.name] = transformIntoStep(nikto.name, nikto.command)
+stepsForParallel[arachni.name] = transformIntoStep(arachni.name, arachni.command)
+
+parallel stepsForParallel
+singleStage("Dojo Ending")
+
+def transformIntoStep(stageName, inputString) {
+    return {
+        node {
+            stage(stageName)
+            {
+                docker.image('appsecpipeline/arachni').inside() {
+                    sh inputString
+                    //sh 'cat /usr/bin/launcsdfadsh.py'
+                }
+            }
+        }
+    }
+}
+
+def singleStage(stageName)
+{
+    node {
+            stage(stageName)
+            {
+                docker.image('appsecpipeline/arachni').inside() {
+                    sh "echo 'ending!'"
+                }
+            }
+    }
+}
