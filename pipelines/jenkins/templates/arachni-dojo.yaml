@@ -1,0 +1,46 @@
+- job:
+    name: Arachni_Dojo
+    display-name: AppSec Pipeline - Arachni and Dojo
+    project-type: pipeline
+    concurrent: true
+    parameters:
+    - string:
+        name: PRODUCT_ID
+        default: "1"
+        description: "Product ID in DefectDojo"
+    - string:
+        name: PROFILE
+        default: "fast"
+        description: "Profile to run for security tools."
+    - string:
+        name: URL
+        default: "http://www.testfire.net"
+        description: "Site to scan for dynamic scans."
+    sandbox: true
+    dsl: |
+      node {
+          step([$class: 'WsCleanup'])
+          print "DEBUG: parameter PRODUCT_ID = ${PRODUCT_ID}"
+          stage("Arachni") {
+              docker.image('appsecpipeline/base-tools').inside() {
+              sh 'launch.py -t arachni -s dynamic -p $PROFILE URL=$URL'
+              }
+          }
+          stage("Post Build") {
+              docker.image('appsecpipeline/base).inside() {
+                    echo "BUILD_URL=${env.BUILD_URL}"
+                    slackSend("Security scan started on URL: ${params.URL} for Build: ${env.BUILD_URL}")
+                    stage("DefectDojo") {
+                    withCredentials([string(credentialsId: 'DOJO_API_KEY', variable: 'DOJO_API_KEY')])
+                        {
+                          echo "dojo"
+                          sh "launch.py -t defectdojo -p all -s collector --api_key='$DOJO_API_KEY' --host=$DOJO_HOST --dir=reports --product=${PRODUCT_ID}"
+                        }
+
+                    }
+
+              }
+
+            }
+
+          }

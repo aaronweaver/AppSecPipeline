@@ -16,12 +16,21 @@ Run Jenkins locally on http://localhost:8080
 docker run --name jenkins -it -p 8080:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock appsecpipeline/jenkins
 ```
 
-Build the AppSec Pipeline Docker
+Build the AppSec Pipeline Dockers
 
 ```
-sh build.sh
+sh build-dockers.sh
+```
+
+Setup your Python Environment for Jenkins Builder, Use the credentials that you setup in the prior step for Jenkins.
+
+```
+sh setup.bash
 ```
 
 ### Run an AppSecPipeline Job
 
-Create a Pipeline job in Jenkins that uses one of the .pipeline examples in pipelines/jenkins/
+If setup ran correctly in Jenkins there will be jobs name AppSec Pipeline
+
+## Run an AppSecPipeline Job
+Rerun or rebuild Jenkins jobs by running jenkins.bash

@@ -1,0 +1,31 @@
+FROM kalilinux/kali-linux-docker
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y \
+    build-essential \
+    ca-certificates \
+    git \
+    python-pip \
+    python2.7 \
+    python2.7-dev \
+    csvtool \
+    openjdk-9-jre-headless
+
+#Python dependency installs
+RUN pip install -U pyyaml
+RUN pip install -U requests
+RUN pip install -U junit_xml_output
+RUN pip install defectdojo_api
+
+#Copy pipeline executor to bin
+COPY controller/launch.py /usr/bin/
+COPY controller/junit.py /usr/bin/
+COPY tools /usr/bin/tools
+
+RUN chmod +x /usr/bin/launch.py
+RUN chmod +x /usr/bin/junit.py
+
+RUN useradd -o -u 1000 jenkins

@@ -16,8 +16,7 @@ from subprocess import call
 from datetime import datetime
 import base64
 
-#baseLocation = "/usr/bin/"
-baseLocation = ""
+baseLocation = "/usr/bin/"
 reportsDir = "reports/"
 
 #Allow for dynamic arguments to support a wide variety of tools

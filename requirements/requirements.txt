@@ -1,0 +1,11 @@
+Jinja2==2.10
+junit-xml==1.8
+junit-xml-output==1.0.3
+MarkupSafe==1.0
+monotonic==1.4
+multi-key-dict==2.0.3
+pbr==3.1.1
+python-jenkins==0.4.15
+PyYAML==3.12
+six==1.11.0
+stevedore==1.27.1
