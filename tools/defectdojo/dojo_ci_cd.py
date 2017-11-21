@@ -128,7 +128,7 @@ def processFiles(dd, engagement_id, file, scanner=None, build=None):
             scannerName = "Arachni Scan"
         elif tool == "vcg":
             scannerName = "VCG Scan"
-        elif tool == "dependency":
+        elif tool == "dependency-check":
             scannerName = "Dependency Check Scan"
         elif tool == "retirejs":
             scannerName = "Retire.js Scan"
@@ -142,6 +142,8 @@ def processFiles(dd, engagement_id, file, scanner=None, build=None):
             scannerName = "OpenVAS CSV"
         elif tool == "snyk":
             scannerName = "Snyk Scan"
+        else:
+            print "Tool not defined in dojo_ci_cd script: " + tool
 
         if scannerName is not None:
             print "Uploading " + scannerName + " scan: " + file

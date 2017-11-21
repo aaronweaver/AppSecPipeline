@@ -15,3 +15,5 @@ RUN wget -O /tmp/dependency-check.zip https://bintray.com/jeremy-long/owasp/down
 RUN /usr/bin/dependency-check/bin/dependency-check.sh --updateonly
 
 RUN chown -R jenkins: /usr/bin/dependency-check
+#Dependency check needs write permission on the data directory
+RUN chmod -R u=rwx /usr/bin/dependency-check/data

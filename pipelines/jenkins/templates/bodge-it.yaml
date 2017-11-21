@@ -6,12 +6,16 @@
     parameters:
     - string:
         name: PRODUCT_ID
-        default: "1"
+        default: "10"
         description: "Product ID in DefectDojo"
     - string:
         name: PROFILE
         default: "all"
         description: "Profile to run for security tools."
+    - string:
+        name: URL
+        default: "http://localhost:8080"
+        description: "URL for scanners."
     sandbox: true
     dsl: |
       node {
@@ -38,6 +42,22 @@
                   sh 'launch.py -t dependency-check -p $PROFILE PROJECT=bodgeit SCAN=bodgeit.war'
                 }
             }
+
+            stage("RetireJS") {
+                docker.image('appsecpipeline/node').inside() {
+                  sh 'launch.py -t retirejs -p $PROFILE PATH=.'
+                }
+            }
+
+            stage("Arachni") {
+              docker.image('psiinon/bodgeit').withRun('-p 8004:8080 -i -t') { c ->
+                  docker.image('appsecpipeline/base-tools').inside("--link ${c.id}:web") {
+                  sh 'sleep 40'
+                  sh 'launch.py -t arachni -s dynamic -p active URL=http://web:8080/bodgeit'
+                  }
+              }
+            }
+            
         } //End Main stage
 
         stage("Post Build") {
