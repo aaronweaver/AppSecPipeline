@@ -15,14 +15,28 @@
     sandbox: true
     dsl: |
       node {
-          step([$class: 'WsCleanup'])
-          print "DEBUG: parameter PRODUCT_ID = ${PRODUCT_ID}"
-          sh 'wget -O bodgeit.war https://github.com/psiinon/bodgeit/releases/download/1.4.0/bodgeit.war'
-          stage("DependencyCheck") {
-              docker.image('appsecpipeline/sast').inside() {
-                sh 'launch.py -t dependency-check -p $PROFILE PROJECT=bodgeit SCAN=bodgeit.war'
-              }
+        stage("Pull Artififacts") {
+            def languages
+
+            step([$class: 'WsCleanup'])
+            print "DEBUG: parameter PRODUCT_ID = ${PRODUCT_ID}"
+            git url: 'https://github.com/psiinon/bodgeit.git'
+            sh 'wget -O bodgeit.war https://github.com/psiinon/bodgeit/releases/download/1.4.0/bodgeit.war'
+
+            stage("Coding Languages") {
+                docker.image('appsecpipeline/base-tools').inside() {
+                    sh 'launch.py -t cloc -p all -s static LOC="."'
+                }
+            }
+
+            languages = readFile "$WORKSPACE/reports/cloc/languages.json"
+            echo "Languages from json"
+            echo languages
+
+            stage("DependencyCheck") {
+                docker.image('appsecpipeline/sast').inside() {
+                  sh 'launch.py -t dependency-check -p $PROFILE PROJECT=bodgeit SCAN=bodgeit.war'
+                }
+            }
           }
-
-
       }
