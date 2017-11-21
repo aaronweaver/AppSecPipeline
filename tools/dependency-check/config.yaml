@@ -1,0 +1,29 @@
+tool:
+  version: AppSecPipeline 0.5.0
+  name: dependency-check
+  tags:
+    - "Static Code Analyzer"
+  type: "static"
+  description: "Dependency-Check is a utility that identifies project dependencies and checks if there are any known, publicly disclosed, vulnerabilities. Currently Java and .NET are supported; additional experimental support has been added for Ruby, Node.js, Python, and limited support for C/C++ build systems (autoconf and cmake)."
+  docker: appsecpipeline/dockerfile-sast
+  url: https://www.owasp.org/index.php/OWASP_Dependency_Check
+  documentation: https://jeremylong.github.io/DependencyCheck/
+  commands:
+    parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
+    pre:
+    exec: "/usr/bin/dependency-check/bin/dependency-check.sh"
+    shell: False
+    post:
+    report: "--out {reportname} --format XML"
+    reportname: "{timestamp}.xml"
+    post:
+    junit:
+  languages:
+    - "java"
+    - "nodejs"
+    - "ruby"
+    - ".net"
+    - "python"
+  profiles:
+    #Runs the full depedency scan
+    - all: "--project $PROJECT --scan $SCAN"

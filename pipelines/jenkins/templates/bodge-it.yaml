@@ -1,0 +1,28 @@
+- job:
+    name: Bodge_It
+    display-name: AppSec Pipeline - BodgetIt
+    project-type: pipeline
+    concurrent: true
+    parameters:
+    - string:
+        name: PRODUCT_ID
+        default: "1"
+        description: "Product ID in DefectDojo"
+    - string:
+        name: PROFILE
+        default: "all"
+        description: "Profile to run for security tools."
+    sandbox: true
+    dsl: |
+      node {
+          step([$class: 'WsCleanup'])
+          print "DEBUG: parameter PRODUCT_ID = ${PRODUCT_ID}"
+          sh 'wget -O bodgeit.war https://github.com/psiinon/bodgeit/releases/download/1.4.0/bodgeit.war'
+          stage("DependencyCheck") {
+              docker.image('appsecpipeline/sast').inside() {
+                sh 'launch.py -t dependency-check -p $PROFILE PROJECT=bodgeit SCAN=bodgeit.war'
+              }
+          }
+
+
+      }

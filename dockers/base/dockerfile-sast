@@ -1,0 +1,15 @@
+FROM appsecpipeline/base
+
+#Python dependency installs
+RUN pip install -U bandit
+
+RUN apt-get install -y \
+    unzip
+
+RUN wget -O /tmp/dependency-check.zip https://bintray.com/jeremy-long/owasp/download_file?file_path=dependency-check-3.0.2-release.zip && \
+    unzip /tmp/dependency-check.zip -d /usr/bin/ && \
+    rm /tmp/dependency-check.zip
+
+#Maybe run 	--updateonly to update NVD?
+
+RUN chown -R jenkins: /usr/bin/dependency-check
