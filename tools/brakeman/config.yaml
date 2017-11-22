@@ -1,0 +1,27 @@
+tool:
+  version: AppSecPipeline 0.5.0
+  name: brakeman
+  tags:
+    - "Static Code Analyzer"
+  type: "static"
+  description: "Brakeman is an open source vulnerability scanner specifically designed for Ruby on Rails applications. It statically analyzes Rails application code to find security issues at any stage of development."
+  docker: appsecpipeline/base
+  url: https://brakemanscanner.org/
+  documentation: https://brakemanscanner.org/docs/
+  commands:
+    parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
+    pre:
+    exec: "brakeman -p $LOC --no-pager"
+    shell: False
+    post:
+    report: "-o {reportname}"
+    reportname: "{timestamp}.json"
+    post:
+    junit:
+  languages:
+    - "ruby"
+  profiles:
+    #There are some checks which are not run by default. To run all checks, use
+    - all: "-A"
+    #If Brakeman is running a bit slow, try
+    - tuned: "--faster"

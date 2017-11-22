@@ -1,0 +1,64 @@
+- job:
+    name: Brakeman
+    display-name: AppSec Pipeline - Brakeman
+    project-type: pipeline
+    concurrent: true
+    parameters:
+    - string:
+        name: PRODUCT_ID
+        default: "10"
+        description: "Product ID in DefectDojo"
+    - string:
+        name: PROFILE
+        default: "all"
+        description: "Profile to run for security tools."
+    sandbox: true
+    dsl: |
+      node {
+        stage("Pull Artifacts") {
+            def languages
+
+            step([$class: 'WsCleanup'])
+            print "DEBUG: parameter PRODUCT_ID = ${PRODUCT_ID}"
+            git url: 'https://github.com/discourse/discourse.git'
+
+            stage("Coding Languages") {
+                docker.image('appsecpipeline/base-tools').inside() {
+                    sh 'launch.py -t cloc -p all -s static LOC="."'
+                }
+            }
+
+            languages = readFile "$WORKSPACE/reports/cloc/languages.json"
+            echo "Languages from json"
+            echo languages
+
+            stage("Brakeman") {
+                docker.image('appsecpipeline/ruby').inside() {
+                  sh 'launch.py -t brakeman -p tuned LOC=.'
+                }
+            }
+
+            stage("RetireJS") {
+                docker.image('appsecpipeline/node').inside() {
+                  sh 'launch.py -t retirejs -p $PROFILE PATH=.'
+                }
+            }
+
+        } //End Main stage
+
+        stage("Post Build") {
+          docker.image('appsecpipeline/base').inside() {
+              echo "BUILD_URL=${env.BUILD_URL}"
+              slackSend("Security scan started on URL: ${params.URL} for Build: ${env.BUILD_URL}")
+              stage("DefectDojo") {
+              withCredentials([string(credentialsId: 'DOJO_API_KEY', variable: 'DOJO_API_KEY')])
+                  {
+                    echo "dojo"
+                    sh "launch.py -t defectdojo -p all -s collector --api_key='$DOJO_API_KEY' --host=$DOJO_HOST --dir=reports --product=${PRODUCT_ID}"
+                  }
+              }
+          }
+
+        }
+
+      } //End Node
