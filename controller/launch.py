@@ -162,10 +162,14 @@ if __name__ == '__main__':
                 #Only launch command if a launch command is specified
                 #Pre and post require a launch command
                 if launchCmd:
-                    #Execute a pre-commmand, such as a setup or update requirement
+                    #Execute a pre-commmand, such as a setup or updated requirement
                     if commands["pre"] is not None:
                         if not test_mode:
-                            call(shlex.split(commands["pre"]))
+                            preCommands = substituteArgs(remaining_argv, commands["pre"])
+                            print "*****************************"
+                            print "Pre-Launch: " + preCommands
+                            print "*****************************"
+                            call(shlex.split(preCommands))
 
                     #Create a directory to store the reports
                     checkFolderPath(tool["name"])

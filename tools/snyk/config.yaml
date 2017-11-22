@@ -1,0 +1,27 @@
+tool:
+  version: AppSecPipeline 0.5.0
+  name: snyk
+  tags:
+    - "Static Code Analyzer"
+  type: "static"
+  description: "Snyk continuously monitors your application's dependencies and lets you quickly respond when new vulnerabilities are disclosed."
+  docker: appsecpipeline/node
+  url: https://snyk.io/
+  documentation: https://snyk.io/docs/
+  commands:
+    parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
+    pre: "snyk auth $API_TOKEN"
+    exec: "snyk"
+    shell: True
+    post:
+    report: "--json > {reportname}"
+    reportname: "{timestamp}.json"
+    post:
+    junit:
+  languages:
+    - "ruby"
+    - "nodejs"
+    - "java"
+    - "python"
+  profiles:
+    - all: "test ."

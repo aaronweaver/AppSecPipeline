@@ -10,7 +10,11 @@ RUN apt-get update \
     python2.7 \
     python2.7-dev
 
+#Install Retire.js
 RUN npm install -g retire
+
+#Install Synk
+RUN npm install -g snyk
 
 #Python dependency installs
 RUN pip install pyyaml
