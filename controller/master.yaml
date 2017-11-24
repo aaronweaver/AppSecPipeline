@@ -1,11 +1,11 @@
 version: AppSecPipeline 0.5.0
 
-#Profile definition of what tools to run for a particular profile
-profile:
+#Profile definition of what tools to run for a particular application
+profiles:
   fast:
     tools:
-      - Nikto
-      - Arachni
+      - nikto
+      - arachni
       - bandit
   checkin:
     tools:

@@ -5,7 +5,7 @@ tool:
     - "Static Code Analyzer"
   type: "static"
   description: "Snyk continuously monitors your application's dependencies and lets you quickly respond when new vulnerabilities are disclosed."
-  docker: appsecpipeline/node
+  docker: "appsecpipeline/node"
   url: https://snyk.io/
   documentation: https://snyk.io/docs/
   commands:

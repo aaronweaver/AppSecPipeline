@@ -12,4 +12,6 @@ RUN apt-get install -y docker-ce
 # To allow access to /var/run/docker.sock on the Mac
 RUN gpasswd -a jenkins staff
 
+# ToDo: Add the plugin: Pipeline Utility Steps
+
 USER jenkins

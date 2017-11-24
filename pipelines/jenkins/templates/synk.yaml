@@ -1,6 +1,6 @@
 - job:
-    name: Sync
-    display-name: AppSec Pipeline - Synk
+    name: Snyk
+    display-name: AppSec Pipeline - Snyk
     project-type: pipeline
     concurrent: true
     parameters:
