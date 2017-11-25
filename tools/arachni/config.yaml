@@ -13,11 +13,11 @@ tool:
   documentation: https://github.com/Arachni/arachni/wiki/Command-line-user-interface
   docker: "appsecpipeline/base-tools"
   parameters:
-   - "URL"
-   - "LOGIN_URL"
-   - "LOGIN_PARMS"
-   - "LOGIN_SUCCESS"
-   - "LOGIN_LOGOUT_PATTERN"
+   - "$URL"
+   - "$LOGIN_URL"
+   - "$LOGIN_PARMS"
+   - "$LOGIN_SUCCESS"
+   - "$LOGIN_LOGOUT_PATTERN"
   commands:
     pre:
     exec: "arachni $URL"
