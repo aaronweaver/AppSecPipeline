@@ -1,5 +1,6 @@
+version: AppSecPipeline 0.5.0
+
 tool:
-  version: AppSecPipeline 0.5.0
   tags:
     - "Dyanmic Scanner"
   type: "dynamic"
@@ -11,12 +12,12 @@ tool:
   url: http://www.arachni-scanner.com/
   documentation: https://github.com/Arachni/arachni/wiki/Command-line-user-interface
   docker: "appsecpipeline/base-tools"
-  parameters: "Parameters used by the tool"
-    - "URL"
-    - "LOGIN_URL"
-    - "LOGIN_PARMS"
-    - "LOGIN_SUCCESS"
-    - "LOGIN_LOGOUT_PATTERN"
+  parameters:
+   - "URL"
+   - "LOGIN_URL"
+   - "LOGIN_PARMS"
+   - "LOGIN_SUCCESS"
+   - "LOGIN_LOGOUT_PATTERN"
   commands:
     pre:
     exec: "arachni $URL"
