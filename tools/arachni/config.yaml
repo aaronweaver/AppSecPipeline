@@ -29,13 +29,12 @@ tool:
   credentials:
     simple: --plugin=autologin:url=$LOGIN_URL,parameters="$LOGIN_PARMS",check="$LOGIN_SUCCESS" --scope-exclude-pattern=$LOGIN_LOGOUT_PATTERN
   profiles:
-    - all: ""
-    - active: "--checks=active/*"
-    - passive: "--checks=passive/*"
-    - fast: "--audit-forms --checks=xss --scope-page-limit=1"
-    - attack_types:
-        file_upload: "--checks=form_upload"
-        xss: "--checks=xss"
-        remote: "--checks=file_inclusion"
-        command_exec: "--checks=os_cmd_injection"
-        sqli: "--checks=sql_injection"
+    all: ""
+    active: "--checks=active/*"
+    passive: "--checks=passive/*"
+    fast: "--audit-forms --checks=xss --scope-page-limit=1"
+    file_upload: "--checks=form_upload"
+    xss: "--checks=xss"
+    remote: "--checks=file_inclusion"
+    command_exec: "--checks=os_cmd_injection"
+    sqli: "--checks=sql_injection"
