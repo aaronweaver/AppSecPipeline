@@ -11,7 +11,12 @@ tool:
   url: http://www.arachni-scanner.com/
   documentation: https://github.com/Arachni/arachni/wiki/Command-line-user-interface
   docker: "appsecpipeline/base-tools"
-  parameters: "URL : URL of the site to scan."
+  parameters: "Parameters used by the tool"
+    - "URL"
+    - "LOGIN_URL"
+    - "LOGIN_PARMS"
+    - "LOGIN_SUCCESS"
+    - "LOGIN_LOGOUT_PATTERN"
   commands:
     pre:
     exec: "arachni $URL"
