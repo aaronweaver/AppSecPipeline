@@ -2,18 +2,27 @@ version: AppSecPipeline 0.5.0
 
 #Profile definition of what tools to run for a particular application
 profiles:
-  fast:
-   - "nikto"
-   - "arachni"
-   - "bandit"
-   - "brakeman"
-   - "retirejs"
+  standard:
+   - tool: "nikto"
+     profile: "fast"
+   - tool: "arachni"
+     profile: "fast"
+   - tool: "bandit"
+     profile: "tuned"
+   - tool: "brakeman"
+     profile: "tuned"
+   - tool: "retirejs"
+     profile: "all"
+
   static:
-   - "bandit"
-   - "brakeman"
-   - "retirejs"
-   - "snyk"
-   - "dependency-check"
+   - tool: "bandit"
+     profile: "tuned"
+   - tool: "brakeman"
+     profile: "tuned"
+   - tool: "retirejs"
+     profile: "all"
+   - tool: "snyk"
+   - tool: "dependency-check"
 
 #Define which profile to run based off of a code checkin
 deployment:
