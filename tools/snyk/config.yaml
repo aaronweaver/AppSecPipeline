@@ -8,8 +8,9 @@ tool:
   docker: "appsecpipeline/node"
   url: https://snyk.io/
   documentation: https://snyk.io/docs/
+  parameters:
+   - "API_TOKEN"
   commands:
-    parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
     pre: "snyk auth $API_TOKEN"
     exec: "snyk"
     shell: True
@@ -24,4 +25,4 @@ tool:
     - "java"
     - "python"
   profiles:
-    - all: "test ."
+    all: "test ."

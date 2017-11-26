@@ -8,8 +8,9 @@ tool:
   docker: "appsecpipeline/node"
   url: https://retirejs.github.io/retire.js/
   documentation: https://github.com/RetireJS/retire.js
+  parameters:
+   - "LOC"
   commands:
-    parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
     pre:
     exec: "retire"
     shell: False
@@ -23,4 +24,4 @@ tool:
     - "nodejs"
   profiles:
     #Runs the full depedency scan
-    - all: "--path $PATH"
+    all: "--path $LOC"

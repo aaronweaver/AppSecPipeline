@@ -8,6 +8,10 @@ tool:
   docker: "appsecpipeline/dockerfile-sast"
   url: https://www.owasp.org/index.php/OWASP_Dependency_Check
   documentation: https://jeremylong.github.io/DependencyCheck/
+  parameters:
+   - "LOC"
+   - "PROJECT"
+   - "SCAN"
   commands:
     parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
     pre:
@@ -26,4 +30,4 @@ tool:
     - "python"
   profiles:
     #Runs the full depedency scan
-    - all: "--project $PROJECT --scan $SCAN"
+    all: "--project $PROJECT --scan $SCAN"

@@ -9,6 +9,12 @@ tool:
   docker: "appsecpipeline/base"
   url: https://github.com/OWASP/django-DefectDojo
   documentation: http://defectdojo.readthedocs.io/en/latest/
+  parameters:
+   - "api_key"
+   - "host"
+   - "product"
+   - "dir"
+   - "proxy"
   commands:
     parameters: "dir : Directory of security tool output."
     pre:
@@ -20,5 +26,5 @@ tool:
     post:
     junit:
   profiles:
-    - all: "--api_key=$api_key --host=$host --product=$product  --dir reports"
-    - all_proxy: "--proxy=$proxy --api_key=$api_key --host=$host --product=$product  --dir reports"
+    all: "--api_key=$api_key --host=$host --product=$product  --dir reports"
+    all_proxy: "--proxy=$proxy --api_key=$api_key --host=$host --product=$product  --dir reports"

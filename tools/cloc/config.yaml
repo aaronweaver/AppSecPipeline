@@ -9,6 +9,8 @@ tool:
   url: https://github.com/AlDanial/cloc
   documentation: https://github.com/AlDanial/cloc
   docker: "appsecpipeline/base"
+  parameters:
+   - "LOC"
   commands:
     parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
     pre:

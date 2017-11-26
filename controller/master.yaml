@@ -4,9 +4,9 @@ version: AppSecPipeline 0.5.0
 profiles:
   fast:
     tools:
-      - nikto
-      - arachni
-      - bandit
+     - nikto
+     - arachni
+     - bandit
   checkin:
     tools:
       - bandit

@@ -11,7 +11,8 @@ tool:
   url: https://cirt.net/Nikto2
   documentation: https://cirt.net/nikto2-docs/
   docker: "appsecpipeline/base"
-  parameters: "URL : IP or URL of the site to scan."
+  parameters:
+   - "URL"
   commands:
     pre:
     exec: "nikto -h $URL"
@@ -20,16 +21,15 @@ tool:
     post: "python /usr/bin/tools/nikto/parser.py -f '{reportname}'"
     junit: "junit.py -f '{reportname}' -t nikto"
   profiles:
-    - all: ""
-    - tuned: "-Tuning x 6"
-    - fast: "-Plugins \"headers;report_xml\""
-    - attack_types:
-        file_upload: "-Tuning 0"
-        misconfig: "-Tuning 2"
-        info: "-Tuning 3"
-        xss: "-Tuning 4"
-        remote: "-Tuning 57"
-        dos: "-Tuning 6"
-        command_exec: "-Tuning 8"
-        sqli: "-Tuning 9"
-        identification: "-Tuning b"
+    all: ""
+    tuned: "-Tuning x 6"
+    fast: "-Plugins \"headers;report_xml\""
+    file_upload: "-Tuning 0"
+    misconfig: "-Tuning 2"
+    info: "-Tuning 3"
+    xss: "-Tuning 4"
+    remote: "-Tuning 57"
+    dos: "-Tuning 6"
+    command_exec: "-Tuning 8"
+    sqli: "-Tuning 9"
+    identification: "-Tuning b"

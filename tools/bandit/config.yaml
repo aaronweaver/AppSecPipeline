@@ -8,6 +8,8 @@ tool:
   docker: "appsecpipeline/base"
   url: https://wiki.openstack.org/wiki/Security/Projects/Bandit
   documentation: https://docs.openstack.org/bandit/latest/index.html
+  parameters:
+   - "LOC"
   commands:
     parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
     pre:
@@ -22,6 +24,6 @@ tool:
     - "python"
   profiles:
     #Runs the full bandit scan
-    - all: "$LOC/*.py"
+    all: "$LOC/*.py"
     #Only the issues that are the highest severity and the highest confidence
-    - tuned: "-lll -iii -r $LOC/*.py"
+    tuned: "-lll -iii -r $LOC/*.py"

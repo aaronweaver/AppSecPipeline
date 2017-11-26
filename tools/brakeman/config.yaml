@@ -8,6 +8,8 @@ tool:
   docker: "appsecpipeline/base"
   url: https://brakemanscanner.org/
   documentation: https://brakemanscanner.org/docs/
+  parameters:
+   - "LOC"
   commands:
     parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
     pre:
@@ -22,6 +24,6 @@ tool:
     - "ruby"
   profiles:
     #There are some checks which are not run by default. To run all checks, use
-    - all: "-A"
+    all: "-A"
     #If Brakeman is running a bit slow, try
-    - tuned: "--faster"
+    tuned: "--faster"

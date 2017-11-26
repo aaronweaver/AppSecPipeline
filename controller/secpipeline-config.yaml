@@ -1,0 +1,314 @@
+tool:
+  version: AppSecPipeline 0.5.0
+  tags:
+    - "Dyanmic Scanner"
+  type: "dynamic"
+  scan_type: "web"
+  name: "appspider"
+  icon-sm:
+  icon-lg:
+  description: "AppSpider automatically finds vulnerabilities across a wide range of applications from the relatively simple to the most complex—and it includes unique capabilities that enable teams to automate more of the security testing program across the entire software development lifecycle, from creation through production."
+  url: https://www.rapid7.com/products/appspider/
+  documentation: https://appspider.help.rapid7.com/docs/
+  docker: appsecpipeline/base
+  parameters:
+   - "URL"
+   - "USERNAME"
+   - "PASSWORD"
+   - "ADMIN-USERNAME"
+   - "ADMIN-PASSWORD"
+   - "CLIENT"
+   - "RUN-SCAN-POLL"
+  commands:
+    pre:
+    exec: "python /usr/bin/tools/appspider/AppSpider.py --url $url --username $username --password $password --admin-username $admin-username --admin-password $admin-password --client $client"
+    shell: False
+    report: "--output-file='{reportname}'"
+    reportname: "VulnerabilitiesSummary.xml"
+    post:
+    junit:
+  profiles:
+    all: "--run-scan-poll $run-scan-poll"
+    active: "--checks=active/*"
+    passive: "--checks=passive/*"
+    fast: "--audit-forms --checks=xss --scope-page-limit=1"
+    file_upload: "--checks=form_upload"
+    xss: "--checks=xss"
+    remote: "--checks=file_inclusion"
+    command_exec: "--checks=os_cmd_injection"
+    sqli: "--checks=sql_injection"
+version: AppSecPipeline 0.5.0
+
+tool:
+  tags:
+    - "Dyanmic Scanner"
+  type: "dynamic"
+  scan_type: "web"
+  name: "arachni"
+  icon-sm:
+  icon-lg:
+  description: "Arachni is a feature-full, modular, high-performance Ruby framework aimed towards helping penetration testers and administrators evaluate the security of modern web applications."
+  url: http://www.arachni-scanner.com/
+  documentation: https://github.com/Arachni/arachni/wiki/Command-line-user-interface
+  docker: "appsecpipeline/base-tools"
+  parameters:
+   - "URL"
+   - "LOGIN_URL"
+   - "LOGIN_PARMS"
+   - "LOGIN_SUCCESS"
+   - "LOGIN_LOGOUT_PATTERN"
+  commands:
+    pre:
+    exec: "arachni $URL"
+    shell: True
+    report: "--report-save-path={reportname}"
+    reportname: "{timestamp}.afr"
+    post: "arachni_reporter {reportname} --reporter=json:outfile={reportname}.json"
+    junit:
+  credentials:
+    simple: --plugin=autologin:url=$LOGIN_URL,parameters="$LOGIN_PARMS",check="$LOGIN_SUCCESS" --scope-exclude-pattern=$LOGIN_LOGOUT_PATTERN
+  profiles:
+    all: ""
+    active: "--checks=active/*"
+    passive: "--checks=passive/*"
+    fast: "--audit-forms --checks=xss --scope-page-limit=1"
+    file_upload: "--checks=form_upload"
+    xss: "--checks=xss"
+    remote: "--checks=file_inclusion"
+    command_exec: "--checks=os_cmd_injection"
+    sqli: "--checks=sql_injection"
+tool:
+  version: AppSecPipeline 0.5.0
+  name: bandit
+  tags:
+    - "Static Code Analyzer"
+  type: "static"
+  description: "Bandit is a tool designed to find common security issues in Python code. To do this Bandit processes each file, builds an AST from it, and runs appropriate plugins against the AST nodes. Once Bandit has finished scanning all the files it generates a report."
+  docker: "appsecpipeline/base"
+  url: https://wiki.openstack.org/wiki/Security/Projects/Bandit
+  documentation: https://docs.openstack.org/bandit/latest/index.html
+  parameters:
+   - "LOC"
+  commands:
+    parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
+    pre:
+    exec: "bandit"
+    shell: True
+    post:
+    report: "-f csv -o {reportname}"
+    reportname: "{timestamp}.csv"
+    post: "python /usr/bin/tools/bandit/parser.py -f {reportname}"
+    junit: "junit.py -f {reportname} -t bandit"
+  languages:
+    - "python"
+  profiles:
+    #Runs the full bandit scan
+    all: "$LOC/*.py"
+    #Only the issues that are the highest severity and the highest confidence
+    tuned: "-lll -iii -r $LOC/*.py"
+tool:
+  version: AppSecPipeline 0.5.0
+  name: "brakeman"
+  tags:
+    - "Static Code Analyzer"
+  type: "static"
+  description: "Brakeman is an open source vulnerability scanner specifically designed for Ruby on Rails applications. It statically analyzes Rails application code to find security issues at any stage of development."
+  docker: "appsecpipeline/base"
+  url: https://brakemanscanner.org/
+  documentation: https://brakemanscanner.org/docs/
+  parameters:
+   - "LOC"
+  commands:
+    parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
+    pre:
+    exec: "brakeman -p $LOC --no-pager"
+    shell: False
+    post:
+    report: "-o {reportname}"
+    reportname: "{timestamp}.json"
+    post:
+    junit:
+  languages:
+    - "ruby"
+  profiles:
+    #There are some checks which are not run by default. To run all checks, use
+    all: "-A"
+    #If Brakeman is running a bit slow, try
+    tuned: "--faster"
+tool:
+  tags:
+    - "Static Code Analyzer"
+  type: "static"
+  name: "cloc"
+  icon-sm:
+  icon-lg:
+  description: "cloc counts blank lines, comment lines, and physical lines of source code in many programming languages."
+  url: https://github.com/AlDanial/cloc
+  documentation: https://github.com/AlDanial/cloc
+  docker: "appsecpipeline/base"
+  parameters:
+   - "LOC"
+  commands:
+    parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
+    pre:
+    exec: "cloc"
+    post:
+    report: "--report-file={reportname}"
+    reportname: "languages.json"
+    post:
+    junit:
+  profiles:
+    - all: "$LOC --json"
+tool:
+  version: AppSecPipeline 0.5.0
+  name: DefectDojo
+  tags:
+    - "Vulnerability Management"
+    - "Report Consumer"
+  type: "collector"
+  description: "DefectDojo is a security program and vulnerability management tool. DefectDojo allows you to manage your application security program, maintain product and application information, schedule scans, triage vulnerabilities and push findings into defect trackers. Consolidate your findings into one source of truth with DefectDojo."
+  docker: "appsecpipeline/base"
+  url: https://github.com/OWASP/django-DefectDojo
+  documentation: http://defectdojo.readthedocs.io/en/latest/
+  parameters:
+   - "api_key"
+   - "host"
+   - "product"
+   - "dir"
+   - "proxy"
+  commands:
+    parameters: "dir : Directory of security tool output."
+    pre:
+    exec: "python /usr/bin/tools/defectdojo/dojo_ci_cd.py"
+    shell: False
+    post:
+    report:
+    reportname:
+    post:
+    junit:
+  profiles:
+    all: "--api_key=$api_key --host=$host --product=$product  --dir reports"
+    all_proxy: "--proxy=$proxy --api_key=$api_key --host=$host --product=$product  --dir reports"
+tool:
+  version: AppSecPipeline 0.5.0
+  name: "retirejs"
+  tags:
+    - "Components with known Vulnerabilities"
+  type: "static"
+  description: "Dependency-Check is a utility that identifies project dependencies and checks if there are any known, publicly disclosed, vulnerabilities. Currently Java and .NET are supported; additional experimental support has been added for Ruby, Node.js, Python, and limited support for C/C++ build systems (autoconf and cmake)."
+  docker: "appsecpipeline/dockerfile-sast"
+  url: https://www.owasp.org/index.php/OWASP_Dependency_Check
+  documentation: https://jeremylong.github.io/DependencyCheck/
+  parameters:
+   - "LOC"
+   - "PROJECT"
+   - "SCAN"
+  commands:
+    parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
+    pre:
+    exec: "/usr/bin/dependency-check/bin/dependency-check.sh"
+    shell: False
+    post:
+    report: "--out {reportname} --format XML"
+    reportname: "{timestamp}.xml"
+    post:
+    junit:
+  languages:
+    - "java"
+    - "nodejs"
+    - "ruby"
+    - ".net"
+    - "python"
+  profiles:
+    #Runs the full depedency scan
+    all: "--project $PROJECT --scan $SCAN"
+tool:
+  version: AppSecPipeline 0.5.0
+  tags:
+    - "Dyanmic Scanner"
+  type: "dynamic"
+  scan_type: "web"
+  name: "nikto"
+  icon-sm:
+  icon-lg:
+  description: "Web server scanner which performs comprehensive tests against web servers for multiple items, including over 3500 potentially dangerous files/CGIs, versions on over 900 servers, and version specific problems on over 250 servers."
+  url: https://cirt.net/Nikto2
+  documentation: https://cirt.net/nikto2-docs/
+  docker: "appsecpipeline/base"
+  parameters:
+   - "URL"
+  commands:
+    pre:
+    exec: "nikto -h $URL"
+    report: "-output '{reportname}'"
+    reportname: "{timestamp}.xml"
+    post: "python /usr/bin/tools/nikto/parser.py -f '{reportname}'"
+    junit: "junit.py -f '{reportname}' -t nikto"
+  profiles:
+    all: ""
+    tuned: "-Tuning x 6"
+    fast: "-Plugins \"headers;report_xml\""
+    file_upload: "-Tuning 0"
+    misconfig: "-Tuning 2"
+    info: "-Tuning 3"
+    xss: "-Tuning 4"
+    remote: "-Tuning 57"
+    dos: "-Tuning 6"
+    command_exec: "-Tuning 8"
+    sqli: "-Tuning 9"
+    identification: "-Tuning b"
+tool:
+  version: AppSecPipeline 0.5.0
+  name: retirejs
+  tags:
+    - "Components with known Vulnerabilities"
+  type: "static"
+  description: "There is a plethora of JavaScript libraries for use on the Web and in Node.JS apps out there. This greatly simplifies development,but we need to stay up-to-date on security fixes. Using 'Components with Known Vulnerabilities' is now a part of the OWASP Top 10 list of security risks and insecure libraries can pose a huge risk to your Web app. The goal of Retire.js is to help you detect the use of JS-library versions with known vulnerabilities."
+  docker: "appsecpipeline/node"
+  url: https://retirejs.github.io/retire.js/
+  documentation: https://github.com/RetireJS/retire.js
+  parameters:
+   - "LOC"
+  commands:
+    pre:
+    exec: "retire"
+    shell: False
+    post:
+    report: "--outputpath {reportname} --outputformat json"
+    reportname: "{timestamp}.json"
+    post:
+    junit:
+  languages:
+    - "javascript"
+    - "nodejs"
+  profiles:
+    #Runs the full depedency scan
+    all: "--path $LOC"
+tool:
+  version: AppSecPipeline 0.5.0
+  name: snyk
+  tags:
+    - "Static Code Analyzer"
+  type: "static"
+  description: "Snyk continuously monitors your application's dependencies and lets you quickly respond when new vulnerabilities are disclosed."
+  docker: "appsecpipeline/node"
+  url: https://snyk.io/
+  documentation: https://snyk.io/docs/
+  parameters:
+   - "API_TOKEN"
+  commands:
+    pre: "snyk auth $API_TOKEN"
+    exec: "snyk"
+    shell: True
+    post:
+    report: "--json > {reportname}"
+    reportname: "{timestamp}.json"
+    post:
+    junit:
+  languages:
+    - "ruby"
+    - "nodejs"
+    - "java"
+    - "python"
+  profiles:
+    all: "test ."
