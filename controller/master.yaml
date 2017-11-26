@@ -3,6 +3,8 @@ version: AppSecPipeline 0.5.0
 #Profile definition of what tools to run for a particular application
 profiles:
   standard:
+   - tool: "cloc"
+     profile: "all"
    - tool: "nikto"
      profile: "fast"
    - tool: "arachni"
@@ -13,6 +15,8 @@ profiles:
      profile: "tuned"
    - tool: "retirejs"
      profile: "all"
+   - tool: "defectdojo"
+     profile: "all"
 
   static:
    - tool: "bandit"
@@ -22,7 +26,13 @@ profiles:
    - tool: "retirejs"
      profile: "all"
    - tool: "snyk"
+     profile: "all"
    - tool: "dependency-check"
+     profile: "all"
+
+  analyze-code:
+   - tool: "cloc"
+     profile: "all"
 
 #Define which profile to run based off of a code checkin
 deployment:

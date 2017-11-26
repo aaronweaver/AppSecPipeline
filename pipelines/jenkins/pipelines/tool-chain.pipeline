@@ -7,7 +7,7 @@ env.DOJO = 'http://dojo:8080'
 
 node {
         stage("Main build") {
-            def languages = readFile "$WORKSPACE/reports/cloc/cloc_2017-11-09-15-59-13_a63fe4fc-8a3b-4579-a2da-75d58c5078fc.json"
+            def languages = readFile "$WORKSPACE/reports/cloc/languages.json"
 
             git url: 'https://github.com/aaronweaver/scanitall.git'
 
