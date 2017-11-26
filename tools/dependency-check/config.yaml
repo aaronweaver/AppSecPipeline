@@ -1,4 +1,4 @@
-tool:
+dependency-check:
   version: AppSecPipeline 0.5.0
   name: "retirejs"
   tags:

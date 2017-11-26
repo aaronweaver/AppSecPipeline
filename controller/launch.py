@@ -135,7 +135,7 @@ if __name__ == '__main__':
                 test_mode = args.test
 
             #Set the object to the tool yaml section
-            tool = config["tool"]
+            tool = config[args.tool]
             #Tooling commands
             commands = tool["commands"]
 

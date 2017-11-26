@@ -1,4 +1,4 @@
-tool:
+defectdojo:
   version: AppSecPipeline 0.5.0
   name: DefectDojo
   tags:

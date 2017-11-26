@@ -1,4 +1,4 @@
-tool:
+cloc:
   tags:
     - "Static Code Analyzer"
   type: "static"
