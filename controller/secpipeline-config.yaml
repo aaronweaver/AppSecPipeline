@@ -157,7 +157,7 @@ cloc:
     post:
     junit:
   profiles:
-    - all: "$LOC --json"
+    all: "$LOC --json"
 defectdojo:
   version: AppSecPipeline 0.5.0
   name: DefectDojo

@@ -21,4 +21,4 @@ cloc:
     post:
     junit:
   profiles:
-    - all: "$LOC --json"
+    all: "$LOC --json"
