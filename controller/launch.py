@@ -141,6 +141,7 @@ if __name__ == '__main__':
 
             #if tool["type"] == scan_type:
                 #Check to see if a profile exists
+            """
             for profile in tool["profiles"]:
                 if profile_run in profile:
                     launchCmd = profile[profile_run]
@@ -152,6 +153,10 @@ if __name__ == '__main__':
                             if isinstance(profile["attack_types"][profile_run], basestring):
                                 launchCmd = profile["attack_types"][profile_run]
                                 profile_found = True
+            """
+            if profile_run in tool["profiles"]:
+                launchCmd = tool["profiles"][profile_run]
+                profile_found = True
 
             #Launch only if command exists
             if profile_found and launchCmd:

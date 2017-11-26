@@ -83,7 +83,7 @@ bandit:
     - "Static Code Analyzer"
   type: "static"
   description: "Bandit is a tool designed to find common security issues in Python code. To do this Bandit processes each file, builds an AST from it, and runs appropriate plugins against the AST nodes. Once Bandit has finished scanning all the files it generates a report."
-  docker: "appsecpipeline/base"
+  docker: "appsecpipeline/base-tools"
   url: https://wiki.openstack.org/wiki/Security/Projects/Bandit
   documentation: https://docs.openstack.org/bandit/latest/index.html
   parameters:
@@ -112,7 +112,7 @@ brakeman:
     - "Static Code Analyzer"
   type: "static"
   description: "Brakeman is an open source vulnerability scanner specifically designed for Ruby on Rails applications. It statically analyzes Rails application code to find security issues at any stage of development."
-  docker: "appsecpipeline/base"
+  docker: "appsecpipeline/ruby"
   url: https://brakemanscanner.org/
   documentation: https://brakemanscanner.org/docs/
   parameters:
@@ -144,7 +144,7 @@ cloc:
   description: "cloc counts blank lines, comment lines, and physical lines of source code in many programming languages."
   url: https://github.com/AlDanial/cloc
   documentation: https://github.com/AlDanial/cloc
-  docker: "appsecpipeline/base"
+  docker: "appsecpipeline/base-tools"
   parameters:
    - "LOC"
   commands:
@@ -166,7 +166,7 @@ defectdojo:
     - "Report Consumer"
   type: "collector"
   description: "DefectDojo is a security program and vulnerability management tool. DefectDojo allows you to manage your application security program, maintain product and application information, schedule scans, triage vulnerabilities and push findings into defect trackers. Consolidate your findings into one source of truth with DefectDojo."
-  docker: "appsecpipeline/base"
+  docker: "appsecpipeline/base-tools"
   url: https://github.com/OWASP/django-DefectDojo
   documentation: http://defectdojo.readthedocs.io/en/latest/
   parameters:
@@ -233,7 +233,7 @@ nikto:
   description: "Web server scanner which performs comprehensive tests against web servers for multiple items, including over 3500 potentially dangerous files/CGIs, versions on over 900 servers, and version specific problems on over 250 servers."
   url: https://cirt.net/Nikto2
   documentation: https://cirt.net/nikto2-docs/
-  docker: "appsecpipeline/base"
+  docker: "appsecpipeline/base-tools"
   parameters:
    - "URL"
   commands:

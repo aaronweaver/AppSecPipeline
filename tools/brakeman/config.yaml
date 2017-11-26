@@ -5,7 +5,7 @@ brakeman:
     - "Static Code Analyzer"
   type: "static"
   description: "Brakeman is an open source vulnerability scanner specifically designed for Ruby on Rails applications. It statically analyzes Rails application code to find security issues at any stage of development."
-  docker: "appsecpipeline/base"
+  docker: "appsecpipeline/ruby"
   url: https://brakemanscanner.org/
   documentation: https://brakemanscanner.org/docs/
   parameters:
