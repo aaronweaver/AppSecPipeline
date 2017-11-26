@@ -1,4 +1,4 @@
-tool:
+appspider:
   version: AppSecPipeline 0.5.0
   tags:
     - "Dyanmic Scanner"
