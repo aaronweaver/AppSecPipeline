@@ -201,7 +201,6 @@ dependency-check:
   parameters:
    - "LOC"
    - "PROJECT"
-   - "SCAN"
   commands:
     parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
     pre:
@@ -220,7 +219,7 @@ dependency-check:
     - "python"
   profiles:
     #Runs the full depedency scan
-    all: "--project $PROJECT --scan $SCAN"
+    all: "--project $PROJECT --scan $LOC"
 nikto:
   version: AppSecPipeline 0.5.0
   tags:
