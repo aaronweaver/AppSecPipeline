@@ -19,6 +19,8 @@ profiles:
      profile: "all"
 
   static:
+   - tool: "cloc"
+     profile: "all"
    - tool: "bandit"
      profile: "tuned"
    - tool: "brakeman"
