@@ -16,7 +16,9 @@ Run Jenkins locally on http://localhost:8080
 docker run --name jenkins -it -p 8080:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock appsecpipeline/jenkins
 ```
 
-Build the AppSec Pipeline Dockers
+Browse to http://localhost:8080 and configure Jenkins using the wizard. Accept the default plugins and configure a user which will be used later to configure the Jenkins jobs.
+
+Build the AppSec Pipeline Dockers.
 
 ```
 sh build-dockers.sh
@@ -30,7 +32,7 @@ sh setup.bash
 
 ### Run an AppSecPipeline Job
 
-If setup ran correctly in Jenkins there will be jobs name AppSec Pipeline
+If setup ran correctly in Jenkins there will be jobs named AppSec Pipeline in Jenkins.
 
 ## Run an AppSecPipeline Job
-Rerun or rebuild Jenkins jobs by running jenkins.bash
+Rerun or rebuild Jenkins jobs by running jenkins.bash.

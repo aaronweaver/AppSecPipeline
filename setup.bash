@@ -31,16 +31,16 @@ unset HISTFILE
   #OSX uses an older version of sed
   if [ "$(uname)" == "Darwin" ]; then
     #Save the settings in the configuration file
-    sed -i "" "s~jenkins-server~$JENKINSSERVER~g" config/env/jenkins_job.ini
-    sed -i "" "s/jenkins-builder/$JENKINSUSER/g" config/env/jenkins_job.ini
-    sed -i "" "s/jenkins-password/$JENKINSPASS/g" config/env/jenkins_job.ini
-    sed -i "" "s/jenkins-password/$JENKINSPASS/g" config/env/jenkins_job.ini
+    sed -i "" "s~jenkins-server~$JENKINSSERVER~g" pipelines/jenkins/config/env/jenkins_job.ini
+    sed -i "" "s/jenkins-builder/$JENKINSUSER/g" pipelines/jenkins/config/env/jenkins_job.ini
+    sed -i "" "s/jenkins-password/$JENKINSPASS/g" pipelines/jenkins/config/env/jenkins_job.ini
+    sed -i "" "s/jenkins-password/$JENKINSPASS/g" pipelines/jenkins/config/env/jenkins_job.ini
   else
     #Save the settings in the configuration file
-    sed -i "s~jenkins-server~$JENKINSSERVER~g" config/env/jenkins_job.ini
-    sed -i "s/jenkins-builder/$JENKINSUSER/g" config/env/jenkins_job.ini
-    sed -i "s/jenkins-password/$JENKINSPASS/g" config/env/jenkins_job.ini
-    sed -i "s/jenkins-password/$JENKINSPASS/g" config/env/jenkins_job.ini
+    sed -i "s~jenkins-server~$JENKINSSERVER~g" pipelines/jenkins/config/env/jenkins_job.ini
+    sed -i "s/jenkins-builder/$JENKINSUSER/g" pipelines/jenkins/config/env/jenkins_job.ini
+    sed -i "s/jenkins-password/$JENKINSPASS/g" pipelines/jenkins/config/env/jenkins_job.ini
+    sed -i "s/jenkins-password/$JENKINSPASS/g" pipelines/jenkins/config/env/jenkins_job.ini
   fi
   echo "Jenkins Builder configuration file created in: pipelines/jenkins/config/jenkins_job.ini"
   echo
@@ -62,11 +62,12 @@ pip install -r requirements/requirements.txt
 
 echo "Installing jenkins job builder"
 git clone https://github.com/openstack-infra/jenkins-job-builder.git
-pip install -e .
+cd jenkins-job-builder && pip install -e .
+cd ../
 
 echo
 echo "Creating Jenkins Jobs"
-jenkins-jobs --conf pipelines/jenkins/config/env/jenkins_job.ini  update -r pipelines/jenkins/templates/*.yaml
+sh jenkins.sh
 
 echo
 echo
