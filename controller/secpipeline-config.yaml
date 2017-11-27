@@ -283,9 +283,9 @@ retirejs:
   profiles:
     #Runs the full depedency scan
     all: "--path $LOC"
-synk:
+snyk:
   version: AppSecPipeline 0.5.0
-  name: snyk
+  name: "snyk"
   tags:
     - "Static Code Analyzer"
   type: "static"
