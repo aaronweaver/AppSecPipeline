@@ -18,6 +18,7 @@ View one of the samples in tools/<toolname>/config.yaml for configuring a new to
 ##### Common Tool Environment Variables
 
 **DAST Specific**
+
 Name     | Description
 -------- | ---
 URL | URL or IP Address of host
@@ -27,6 +28,7 @@ LOGIN_SUCCESS | Regular expression for text the scanner should look for on succs
 LOGIN_LOGOUT_PATTERN | Specific text for the scanner to look for to avoid logging out.
 
 **SAST Specific**
+
 Name     | Description
 -------- | ---
 LOC | Location of the source to scan.
