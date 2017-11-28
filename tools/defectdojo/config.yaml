@@ -10,11 +10,11 @@ defectdojo:
   url: https://github.com/OWASP/django-DefectDojo
   documentation: http://defectdojo.readthedocs.io/en/latest/
   parameters:
-   - "api_key"
-   - "host"
-   - "product"
-   - "dir"
-   - "proxy"
+   - "DOJO_API_KEY"
+   - "HOST"
+   - "PRODUCT"
+   - "DIR"
+   - "PROXY"
   commands:
     parameters: "dir : Directory of security tool output."
     pre:
@@ -26,5 +26,5 @@ defectdojo:
     post:
     junit:
   profiles:
-    all: "--api_key=$api_key --host=$host --product=$product  --dir reports"
-    all_proxy: "--proxy=$proxy --api_key=$api_key --host=$host --product=$product  --dir reports"
+    all: "--api_key=$DOJO_API_KEY --host=$HOST --product=$PRODUCT  --dir DIR"
+    all_proxy: "--proxy=$PROXY--api_key=$DOJO_API_KEY --host=$HOST --product=$PRODUCT  --dir DIR"

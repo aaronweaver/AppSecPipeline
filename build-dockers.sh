@@ -8,3 +8,11 @@ docker build --no-cache -f dockers/base/dockerfile-base-tools . -t appsecpipelin
 docker build --no-cache -f dockers/base/dockerfile-sast . -t appsecpipeline/sast
 docker build --no-cache -f dockers/base/dockerfile-node . -t appsecpipeline/node
 docker build --no-cache -f dockers/base/dockerfile-ruby . -t appsecpipeline/ruby
+
+echo
+echo "Command Shortcuts"
+echo 'docker run --rm -ti appsecpipeline/base /bin/bash'
+echo 'docker run --rm -ti appsecpipeline/base-tools /bin/bash'
+echo 'docker run --rm -ti appsecpipeline/sast /bin/bash'
+echo 'docker run --rm -ti dockers/base/dockerfile-node /bin/bash'
+echo 'docker run --rm -ti dockers/base/dockerfile-ruby /bin/bash'

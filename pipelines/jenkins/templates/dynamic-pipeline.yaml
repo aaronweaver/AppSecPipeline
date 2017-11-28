@@ -1,9 +1,14 @@
 - job:
     name: DynamicPipeline
     display-name: AppSec Pipeline - Dynamic (Master.yaml)
+    description: "Builds a dynamic pipeline using the master.yaml file from the AppSecPipeline project. Please specify a global credential for the dojo API key: DOJO_API_KEY\n\n"
     project-type: pipeline
     concurrent: true
     parameters:
+    - string:
+        name: DOJO_HOST
+        default: "http://localhost:8000"
+        description: "URL for DefectDojo"
     - string:
         name: PRODUCT_ID
         default: "10"
@@ -95,8 +100,11 @@
                       sh 'chmod -R u+w .git' //Quirk with git and jenkins unstash command
                       unstash "git"
                       docker.image(dockerName).inside() {
-                          sh "'${cmd}'"
-                          sh "echo 'Complete'"
+                      withCredentials([string(credentialsId: 'DOJO_API_KEY', variable: 'DOJO_API_KEY')])
+                          {
+                            sh "'${cmd}'"
+                            sh "echo 'Complete'"
+                          }
                       }
                   }
           print "Stashing files: reports/" + stageName + "/*"

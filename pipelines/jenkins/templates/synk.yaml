@@ -13,9 +13,9 @@
         default: "all"
         description: "Profile to run for security tools."
     - string:
-        name: APIKEY
+        name: SNYK_APIKEY
         default: ""
-        description: "Run Synk and visit your account info page."
+        description: "Run Snyk and visit your account info page."
     sandbox: true
     dsl: |
       node {
@@ -38,7 +38,7 @@
 
             stage("Synk") {
                 docker.image('appsecpipeline/node').inside() {
-                  sh 'launch.py -t snyk -p $PROFILE API_TOKEN=${APIKEY}'
+                  sh 'launch.py -t snyk -p $PROFILE API_TOKEN=${SNYK_APIKEY}'
                 }
             }
 

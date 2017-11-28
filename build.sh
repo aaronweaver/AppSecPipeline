@@ -1,5 +1,6 @@
-echo "Keeping it tidy."
-docker rmi $(docker images | grep "none" | awk '/ / { print $3 }')
-echo "Building docker"
-docker build -f dockers/base/dockerfile . -t appsecpipeline/base
-#docker build -f dockers/base/dockerfile-arachni . -t appsecpipeline/arachni
+echo "Building Jenkins Jobs"
+sh jenkins.sh
+echo
+echo "Creating global tool yaml"
+python build/combine-yaml.py
+echo "Complete\n"
