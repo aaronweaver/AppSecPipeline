@@ -20,9 +20,9 @@ profiles:
 
   dynamic:
    - tool: "nikto"
-     profile: "all"
+     profile: "tuned"
    - tool: "arachni"
-     profile: "all"
+     profile: "active"
    - tool: "defectdojo"
      profile: "all"
 

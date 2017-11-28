@@ -290,6 +290,9 @@ class Main:
         proxy = args["proxy"]
 
         if dir is not None or file is not None:
+            if ":" not in api_key:
+                print "API Key not in the correct format, must be: <user>:<guid>"
+                quit()
             apiParsed = api_key.split(':')
             user = apiParsed[0]
             api_key = apiParsed[1]
