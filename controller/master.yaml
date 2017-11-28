@@ -18,6 +18,14 @@ profiles:
    - tool: "defectdojo"
      profile: "all"
 
+  dynamic:
+   - tool: "nikto"
+     profile: "fast"
+   - tool: "arachni"
+     profile: "fast"
+   - tool: "defectdojo"
+     profile: "all"
+
   static:
    - tool: "cloc"
      profile: "all"

@@ -6,7 +6,7 @@ A curated list of tools that are packaged in the AppSecPipeline docker images.
 
 Tool are launched via a YAML file in the tool folder name. For example arachni conists of: tools/arachni/config.yaml
 
-Yaml Tool Specification:
+**Yaml Tool Specification:**
 
 View one of the samples in tools/<toolname>/config.yaml for configuring a new tool.
 
