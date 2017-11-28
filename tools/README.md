@@ -15,7 +15,7 @@ View one of the samples in tools/<toolname>/config.yaml for configuring a new to
 * If the tool requires an API key, preface the variable with TOOLNAME-API_KEY
 * Review the common variable names below to eliminate duplication and to make the tool easier to configure and run.
 
-##### Common Tool Environment Variables
+#### Common Tool Environment Variables
 
 **DAST Specific**
 
