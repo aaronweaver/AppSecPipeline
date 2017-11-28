@@ -20,9 +20,9 @@ profiles:
 
   dynamic:
    - tool: "nikto"
-     profile: "fast"
+     profile: "all"
    - tool: "arachni"
-     profile: "fast"
+     profile: "all"
    - tool: "defectdojo"
      profile: "all"
 

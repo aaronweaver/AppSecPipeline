@@ -10,7 +10,11 @@
         default: "http://localhost:8000"
         description: "URL for DefectDojo"
     - string:
-        name: PRODUCT_ID
+        name: DOJO_API_KEY
+        default:
+        description: "Dojo API Key"
+    - string:
+        name: DOJO_PRODUCT_ID
         default: "10"
         description: "Product ID in DefectDojo"
     - string:
