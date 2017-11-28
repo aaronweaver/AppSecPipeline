@@ -27,6 +27,8 @@ profiles:
      profile: "tuned"
    - tool: "retirejs"
      profile: "all"
+     finding-severity: #Only import issues from retireJs with a severity of Critical
+       - "Critical"
    - tool: "snyk"
      profile: "all"
    - tool: "dependency-check"
@@ -36,7 +38,14 @@ profiles:
    - tool: "cloc"
      profile: "all"
 
+#Global Import issue threshold
+finding-severity:
+  - "Critical"
+  - "High"
+  - "Medium"
+
 #Define which profile to run based off of a code checkin
 deployment:
   master: fast
-  devel: checkin
+  devel: sast
+  pre-prod: standard

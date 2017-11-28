@@ -1,0 +1,154 @@
+- job:
+    name: DynamicPipeline
+    display-name: AppSec Pipeline - Dynamic (Master.yaml)
+    project-type: pipeline
+    concurrent: true
+    parameters:
+    - string:
+        name: PRODUCT_ID
+        default: "10"
+        description: "Product ID in DefectDojo"
+    - string:
+        name: PROFILE
+        default: "static"
+        description: "Profile to run that is specified in master yaml. Two profiles are currently define: standard, static and  analyze-code."
+    - string:
+        name: LOC
+        default: "."
+        description: "Location of source code which is typically in the current directory, '.'."
+    - string:
+        name: URL
+        default: "http://www.testfire.net/"
+        description: ""
+    - string:
+        name: PROJECT
+        default: "ProjectName"
+        description: "Probably makes sense to move this to an environmental variable"
+    sandbox: true
+    dsl: |
+      import hudson.model.*
+
+      node {
+          git url: 'https://github.com/fchollet/keras.git'
+          stash name: 'git', useDefaultExcludes: false
+
+          sh 'wget -O master.yaml https://raw.githubusercontent.com/aaronweaver/AppSecPipeline/master/controller/master.yaml'
+          sh 'wget -O config.yaml https://raw.githubusercontent.com/aaronweaver/AppSecPipeline/master/controller/secpipeline-config.yaml'
+
+          def masterYaml = readYaml file: 'master.yaml'
+          def toolYaml = readYaml file: 'config.yaml'
+          def languages = ""
+          def supportedLang
+          def found = false
+          def toolToRun = masterYaml["profiles"][params["PROFILE"]]
+          def toolType = ""
+
+          toolToRun.each{
+              //Load langages file
+              if (it["tool"] == "cloc")
+              {
+                  launchTool(toolYaml, it["tool"], it["profile"])
+                  unstash 'cloc'
+                  languages = readFile "$WORKSPACE/reports/cloc/languages.json"
+                  languages = languages.toLowerCase()
+                  print "Language Summary: " + languages
+              } else {
+                  if (toolYaml[it["tool"]].containsKey("type"))
+                  {
+                      toolType = toolYaml[it["tool"]]["type"]
+                  }
+
+                  if (toolType == "static") {
+                      print "Static code tool:"
+                      supportedLang = toolYaml[it["tool"]]["languages"]
+                      supportedLang.each{
+                          //print "Languages: " + languages
+                          //print "Tool Language: " + it
+                          if (languages.contains(it))
+                          {
+                              found = true
+                          }
+                      }
+                      if (found == true) {
+                          launchTool(toolYaml, it["tool"], it["profile"])
+                      } else
+                      {
+                          print "Skipped Static Scanner Tool: " + it["tool"]
+                      }
+                      found = false
+                  } else {
+                      launchTool(toolYaml, it["tool"], it["profile"])
+                  }
+                  toolType = ""
+              }
+              deleteDir()
+          }
+
+          //launchTool(toolYaml, "arachni")
+      }
+
+      def singleStage(stageName, dockerName, cmd)
+      {
+          node {
+                  stage(stageName)
+                  {
+                      sh 'chmod -R u+w .git' //Quirk with git and jenkins unstash command
+                      unstash "git"
+                      docker.image(dockerName).inside() {
+                          sh "'${cmd}'"
+                          sh "echo 'Complete'"
+                      }
+                  }
+          print "Stashing files: reports/" + stageName + "/*"
+          stash includes: 'reports/' + stageName + '/*', name: stageName
+          }
+      }
+
+      //Prepare and launch the tool
+      def launchTool(yamlData, toolName, profile)
+      {
+          def t = yamlData[toolName]
+          def dockerCmd = getCommand(t, profile)
+
+          def parms = parseParameters(t, dockerCmd)
+          singleStage(toolName, t["docker"], formatCommand(toolName, parms, profile))
+      }
+
+      //Formats the command for launching docker
+      def formatCommand(stageName, cmdStr, profile)
+      {
+          def launchStr = "'launch.py -t ${stageName} -p ${profile} ${cmdStr}'"
+          print "Launch command: ${launchStr}"
+          return launchStr
+      }
+
+      //Substitute the appropriate input variables
+      def parseParameters(t, command)
+      {
+          def parms = t["parameters"]
+          def cmdStr = ""
+
+          parms.each{
+              //Only substitute parameters if defined for the command
+              print "Parameter found: " + it
+              if (command.contains(it))
+              {
+                  cmdStr = cmdStr + " $it=" + params[it]
+              }
+          }
+          print "Commands: " + command
+          print "Commands Found: " + cmdStr
+          return cmdStr
+      }
+
+      //Retrieves the command based on tool and profile
+      def getCommand(t, profile)
+      {
+          //Retrieve the executable
+          def toolCommand = t["commands"]["exec"]
+
+          //Retrieve the profile
+          def toolProfile = t["profiles"][profile]
+
+          return "${toolCommand} ${toolProfile}"
+      }

@@ -1,6 +1,6 @@
 dependency-check:
   version: AppSecPipeline 0.5.0
-  name: "retirejs"
+  name: "dependency-check"
   tags:
     - "Components with known Vulnerabilities"
   type: "static"
