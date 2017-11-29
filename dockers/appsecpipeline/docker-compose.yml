@@ -1,0 +1,21 @@
+version: "3"
+services:
+  bodgeit:
+    image: psiinon/bodgeit
+    ports:
+      - "9000:8080"
+  dojo:
+    image: mtesauro/defect-dojo:1.1
+    ports:
+      - "8000:8000"
+  jenkins-pipeline:
+    image: appsecpipeline/jenkins
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jenkins_home:/var/jenkins_home
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+
+volumes:
+  jenkins_home:

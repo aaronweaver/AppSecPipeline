@@ -7,14 +7,17 @@ echo "    You'll need the URL to your Jenkins sever, username and password"
 echo "=================================================================================="
 echo
 
+#JENKINS path
+JENKINS_PATH="pipelines/jenkins"
+
 #Create the config/env files for environment specific configuration
-if [[ ! -e pipelines/jenkins/config/env ]]; then
+if [[ ! -e $JENKINS_PATH/config/env ]]; then
     echo "creating directory"
     mkdir pipelines/jenkins/config/env
 fi
 
 #Copy the jenkins configuration file
-cp pipelines/jenkins/config/template/jenkins_job.ini.template pipelines/jenkins/config/env/jenkins_job.ini
+cp $JENKINS_PATH/config/template/jenkins_job.ini.template pipelines/jenkins/config/env/jenkins_job.ini
 
 unset HISTFILE
 
@@ -31,18 +34,18 @@ unset HISTFILE
   #OSX uses an older version of sed
   if [ "$(uname)" == "Darwin" ]; then
     #Save the settings in the configuration file
-    sed -i "" "s~jenkins-server~$JENKINSSERVER~g" pipelines/jenkins/config/env/jenkins_job.ini
-    sed -i "" "s/jenkins-builder/$JENKINSUSER/g" pipelines/jenkins/config/env/jenkins_job.ini
-    sed -i "" "s/jenkins-password/$JENKINSPASS/g" pipelines/jenkins/config/env/jenkins_job.ini
-    sed -i "" "s/jenkins-password/$JENKINSPASS/g" pipelines/jenkins/config/env/jenkins_job.ini
+    sed -i "" "s~jenkins-server~$JENKINSSERVER~g" $JENKINS_PATH/config/env/jenkins_job.ini
+    sed -i "" "s/jenkins-builder/$JENKINSUSER/g" $JENKINS_PATH/config/env/jenkins_job.ini
+    sed -i "" "s/jenkins-password/$JENKINSPASS/g" $JENKINS_PATH/config/env/jenkins_job.ini
+    sed -i "" "s/jenkins-password/$JENKINSPASS/g" $JENKINS_PATH/config/env/jenkins_job.ini
   else
     #Save the settings in the configuration file
-    sed -i "s~jenkins-server~$JENKINSSERVER~g" pipelines/jenkins/config/env/jenkins_job.ini
-    sed -i "s/jenkins-builder/$JENKINSUSER/g" pipelines/jenkins/config/env/jenkins_job.ini
-    sed -i "s/jenkins-password/$JENKINSPASS/g" pipelines/jenkins/config/env/jenkins_job.ini
-    sed -i "s/jenkins-password/$JENKINSPASS/g" pipelines/jenkins/config/env/jenkins_job.ini
+    sed -i "s~jenkins-server~$JENKINSSERVER~g" $JENKINS_PATH/config/env/jenkins_job.ini
+    sed -i "s/jenkins-builder/$JENKINSUSER/g" $JENKINS_PATH/config/env/jenkins_job.ini
+    sed -i "s/jenkins-password/$JENKINSPASS/g" $JENKINS_PATH/config/env/jenkins_job.ini
+    sed -i "s/jenkins-password/$JENKINSPASS/g" $JENKINS_PATH/config/env/jenkins_job.ini
   fi
-  echo "Jenkins Builder configuration file created in: pipelines/jenkins/config/jenkins_job.ini"
+  echo "Jenkins Builder configuration file created in: $JENKINS_PATH/config/jenkins_job.ini"
   echo
 #fi
 
@@ -67,7 +70,7 @@ cd ../
 
 echo
 echo "Creating Jenkins Jobs"
-sh jenkins.sh
+sh build/jenkins.sh
 
 echo
 echo

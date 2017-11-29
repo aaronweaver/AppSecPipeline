@@ -20,7 +20,12 @@ RUN pip install -U requests
 RUN pip install -U junit_xml_output
 RUN pip install defectdojo_api
 
-#Copy pipeline executor to bin
+#ENV PATH="/usr/bin/appsecpipeline:${PATH}"
+#COPY controller/launch.py /usr/bin/appsecpipeline
+#COPY controller/junit.py /usr/bin/appsecpipeline
+#COPY tools /usr/bin/appsecpipeline/tools
+
+#Copy pipeline executor to bin Will deprecate once scripts are moved
 COPY controller/launch.py /usr/bin/
 COPY controller/junit.py /usr/bin/
 COPY tools /usr/bin/tools

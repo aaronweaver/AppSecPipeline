@@ -2,7 +2,7 @@
 
 Docker integration with Jenkins Pipeline to automate your application security pipeline.
 
-### Docker Builds
+### Docker Build
 
 Build the Jenkins Docker
 
@@ -36,3 +36,22 @@ If setup ran correctly in Jenkins there will be jobs named AppSec Pipeline in Je
 
 ## Run an AppSecPipeline Job
 Rerun or rebuild Jenkins jobs by running jenkins.bash.
+
+### Docker Compose
+
+The docker compose environment sets up Jenkins based off the Jenkins build above, DefectDojo and the BodgeIt app for testing the tools.
+
+```
+cd dockers/app/
+docker-compose up
+```
+
+DefectDojo: http://localhost:8000
+BodgeIt: http://localhost:9000/bodgeit
+Jenkins: http://localhost:8080
+
+Startup a docker tool for testing purposes:
+
+```
+docker run --rm --name appsecpipeline -it --network=appsecpipeline_default -v ${PWD}/tools:/usr/bin/tools -v ${PWD}/controller/:/usr/bin/appsecpipeline  -v appsecpipeline:/var/appsecpipeline appsecpipeline/base-tools /bin/bash
+```
