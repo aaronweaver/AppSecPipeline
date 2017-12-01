@@ -96,7 +96,7 @@ bandit:
     post:
     report: "-f csv -o {reportname}"
     reportname: "{timestamp}.csv"
-    post: "python /usr/bin/tools/bandit/parser.py -f {reportname}"
+    post: "python /usr/bin/appsecpipeline/tools/bandit/parser.py -f {reportname}"
     junit: "junit.py -f {reportname} -t bandit"
   languages:
     - "python"
@@ -137,7 +137,7 @@ brakeman:
 cloc:
   tags:
     - "Static Code Analyzer"
-  type: "static"
+  type: "code-analyzer"
   name: "cloc"
   icon-sm:
   icon-lg:
@@ -154,7 +154,7 @@ cloc:
     post:
     report: "--report-file={reportname}"
     reportname: "languages.json"
-    post:
+    post: "cat {reportname}"
     junit:
   profiles:
     all: "$LOC --json"
@@ -177,7 +177,7 @@ defectdojo:
   commands:
     parameters: "dir : Directory of security tool output."
     pre:
-    exec: "python /usr/bin/tools/defectdojo/dojo_ci_cd.py"
+    exec: "python /usr/bin/appsecpipeline/tools/defectdojo/dojo_ci_cd.py"
     shell: False
     post:
     report:

@@ -18,11 +18,15 @@ profiles:
    - tool: "defectdojo"
      profile: "all"
 
+  dojo:
+   - tool: "defectdojo"
+     profile: "all"
+
   dynamic:
    - tool: "nikto"
      profile: "tuned"
    - tool: "arachni"
-     profile: "active"
+     profile: "xss"
    - tool: "defectdojo"
      profile: "all"
 

@@ -264,7 +264,7 @@ class Main:
         parser.add_argument('--api_key', help="API Key: user:guidvalue", required=True)
         parser.add_argument('--product', help="Dojo Product ID", required=True)
         parser.add_argument('--file', help="Scanner file", required=False)
-        parser.add_argument('--dir', help="Scanner directory, needs to have the scanner name with the scan file in the folder. Ex: reports/nmap/nmap.csv", required=False)
+        parser.add_argument('--dir', help="Scanner directory, needs to have the scanner name with the scan file in the folder. Ex: reports/nmap/nmap.csv", required=False, default="reports")
         parser.add_argument('--scanner', help="Type of scanner", required=False)
         parser.add_argument('--build', help="Build ID", required=False)
         parser.add_argument('--engagement', help="Engagement ID (optional)", required=False)

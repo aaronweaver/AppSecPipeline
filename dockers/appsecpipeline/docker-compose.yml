@@ -5,7 +5,7 @@ services:
     ports:
       - "9000:8080"
   dojo:
-    image: mtesauro/defect-dojo:1.1
+    image: appsecpipeline/django-defectdojo:latest
     ports:
       - "8000:8000"
   jenkins-pipeline:

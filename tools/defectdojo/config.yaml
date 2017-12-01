@@ -17,7 +17,7 @@ defectdojo:
   commands:
     parameters: "dir : Directory of security tool output."
     pre:
-    exec: "python /usr/bin/tools/defectdojo/dojo_ci_cd.py"
+    exec: "python /usr/bin/appsecpipeline/tools/defectdojo/dojo_ci_cd.py"
     shell: False
     post:
     report:

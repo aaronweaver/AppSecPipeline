@@ -16,7 +16,7 @@ from subprocess import call
 from datetime import datetime
 import base64
 
-baseLocation = "/usr/bin/"
+baseLocation = "/usr/bin/appsecpipeline/"
 reportsDir = "reports/"
 
 #Allow for dynamic arguments to support a wide variety of tools
@@ -95,10 +95,7 @@ def getYamlConfig(toolName):
     return yamlLoc
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-    # Turn off help, so we print all options in response to -h
-        add_help=False
-        )
+    parser = argparse.ArgumentParser(add_help=False)
     #Command line options
     parser.add_argument("-t", "--tool", help="Tool to Run", required=True)
     parser.add_argument("-s", "--scan_type", help="Scan Type (dynamic, static)", default=None)

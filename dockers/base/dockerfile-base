@@ -20,17 +20,16 @@ RUN pip install -U requests
 RUN pip install -U junit_xml_output
 RUN pip install defectdojo_api
 
-#ENV PATH="/usr/bin/appsecpipeline:${PATH}"
-#COPY controller/launch.py /usr/bin/appsecpipeline
-#COPY controller/junit.py /usr/bin/appsecpipeline
-#COPY tools /usr/bin/appsecpipeline/tools
+RUN mkdir /usr/bin/appsecpipeline/
+ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
+COPY tools /usr/bin/appsecpipeline/tools
 
 #Copy pipeline executor to bin Will deprecate once scripts are moved
-COPY controller/launch.py /usr/bin/
-COPY controller/junit.py /usr/bin/
-COPY tools /usr/bin/tools
+#COPY controller/launch.py /usr/bin/
+#COPY controller/junit.py /usr/bin/
+#COPY tools /usr/bin/tools
 
-RUN chmod +x /usr/bin/launch.py
-RUN chmod +x /usr/bin/junit.py
+RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
+RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
 
 RUN useradd -o -u 1000 jenkins
