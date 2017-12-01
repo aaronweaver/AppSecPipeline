@@ -165,4 +165,9 @@ if __name__ == '__main__':
         #Remove temporary shared folder
         deleteVolume(volume)
 
+    print "**********************************************"
+    print "Container UUID Prefix: " + pipelineLaunchUID
+    print "Setup Docker: " + getContainerName(pipelineLaunchUID, "setup")
+    print "Shared Volume: " + getVolumeName(pipelineLaunchUID)
+    print "**********************************************\n\n"
     print "Complete!\n\n"
