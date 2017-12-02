@@ -7,8 +7,10 @@ import tarfile
 from cStringIO import StringIO
 import io
 import time
+import shutil
 
 baseLocation = "../../controller"
+langFile = None
 
 def substituteArgs(args, command):
 
@@ -44,28 +46,36 @@ def getCommand(toolName, profile, commands):
 
     return command
 
-def launcherControl(client, docker, tool, command, pipelineLaunchUID, toolProfile):
+def launcherControl(client, docker, tool, command, pipelineLaunchUID, toolProfile, volumePath=None):
     runContainer = False
     #Check tool profile (dynamic/static/code-analyzer)
     toolType = toolProfile["type"]
     if toolType == "dynamic":
         runContainer = True
     elif toolType == "static":
-        runContainer = True
+        if checkToolLanguage(toolProfile["languages"]):
+            runContainer = True
+        else:
+            print "Tool %s Skipped, tool doesn't support language." % tool
+            runContainer = False
     elif toolType == "code-analyzer":
         runContainer = True
 
     if runContainer:
-        launchContainer(client, docker, tool, command, pipelineLaunchUID)
+        launchContainer(client, docker, tool, command, pipelineLaunchUID, volumePath=volumePath)
     else:
         print "Skipped Tool: %s" % (tool)
 
     if toolType == "code-analyzer":
         checkLanguages(getContainerName(pipelineLaunchUID, tool))
 
-def launchContainer(client, docker, tool, command, pipelineLaunchUID, tty=False):
+def launchContainer(client, docker, tool, command, pipelineLaunchUID, tty=False, volumePath=None):
     #Shared volume for reporting
-    appsecpipelineVolume = {getVolumeName(pipelineLaunchUID): {'bind': '/var/appsecpipeline', 'mode': 'rw'}}
+    volumeToUse = getVolumeName(pipelineLaunchUID)
+    if volumePath is not None:
+        volumeToUse = volumePath
+
+    appsecpipelineVolume = {volumeToUse: {'bind': '/var/appsecpipeline', 'mode': 'rw'}}
 
     #Container Launch
     containerName = getContainerName(pipelineLaunchUID, tool)
@@ -93,13 +103,38 @@ def getContainerName(pipelineLaunchUID, tool):
 def deleteVolume(volume):
     return volume.remove()
 
+def checkToolLanguage(toolLanguage):
+    global langFile
+    langFound = False
+    for language in toolLanguage:
+        if language.lower() in langFile:
+            langFound = True
+            exit
+
+    return langFound
+
 def checkLanguages(containerName):
-    print "Not implemented"
-    #client = docker.APIClient(base_url='unix://var/run/docker.sock')
-    #print client.copy(container=containerName, resource="/var/appsecpipeline/reports/cloc/languages.json")
-    #stream, stat = client.get_archive("appsecpipeline_jenkins-pipeline_1", "/etc/passwd")
-    #raw_data=stream.read()
-    #tar = tarfile.open(mode= "r|", fileobj = StringIO(stream))
+    #add try catch
+    global langFile
+    client = docker.APIClient(base_url='unix://var/run/docker.sock')
+    stream, stat = client.get_archive(containerName, "/var/appsecpipeline/reports/cloc/languages.json")
+
+    runId = str(uuid.uuid4())
+    tarLangFile = "/tmp/" + runId + ".tar.gz"
+    with open(tarLangFile, "w") as f:
+        f.write(stream.read())
+
+    f.close()
+    targetDirectory = os.path.join("/tmp/",runId)
+    tar = tarfile.open(tarLangFile)
+    tar.extractall(targetDirectory)
+    tar.close()
+
+    with open(os.path.join(targetDirectory,"languages.json"), 'r') as f:
+        langFile = f.read().lower() 
+
+    os.remove(tarLangFile)
+    shutil.rmtree(targetDirectory)
 
 def copytoContainer(containerName, source, dest):
     tarstream = io.BytesIO()
@@ -117,11 +152,13 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--dir", help="Directory to include in docker scan. (Copies folder to docker shared volume.)", default=False)
     parser.add_argument("-m", "--test", help="Run the command in test mode only, non-execution.", default=False)
     parser.add_argument("-c", "--clean", help="Remove the containers and volumes once completed.", default=True)
+    parser.add_argument("-v", "--volume", help="Specify the name of the volume to present to the containers.", default=None)
 
     args, remaining_argv = parser.parse_known_args()
     profile = args.profile
     sourceDir = args.dir
     cleanUp = args.clean
+    volumeMount = args.volume
 
     masterYaml = getYamlConfig("master.yaml")
     toolYaml = getYamlConfig("secpipeline-config.yaml")
@@ -135,7 +172,7 @@ if __name__ == '__main__':
         print getContainerName(pipelineLaunchUID, "setup")
         print "Copying folder: %s to /var/appsecpipeline" % sourceDir
         #Start a container for copying the folder
-        launchContainer(client, "appsecpipeline/base", "setup", "/bin/bash", pipelineLaunchUID, tty=True)
+        launchContainer(client, "appsecpipeline/base", "setup", "/bin/bash", pipelineLaunchUID, tty=True, volumePath=volumeMount)
         copytoContainer(getContainerName(pipelineLaunchUID, "setup"), sourceDir, "/var/appsecpipeline")
         #Stop the setup container
         lowLevelclient = docker.APIClient(base_url='unix://var/run/docker.sock')
@@ -152,7 +189,7 @@ if __name__ == '__main__':
         dockerCommand = getCommand(toolName, toolProfile, toolArgs)
 
         volume = createVolume(pipelineLaunchUID)
-        launcherControl(client, toolDetails["docker"], toolName, dockerCommand, pipelineLaunchUID, toolDetails)
+        launcherControl(client, toolDetails["docker"], toolName, dockerCommand, pipelineLaunchUID, toolDetails, volumePath=volumeMount)
 
     if cleanUp:
         #Clean up time
@@ -168,6 +205,9 @@ if __name__ == '__main__':
     print "**********************************************"
     print "Container UUID Prefix: " + pipelineLaunchUID
     print "Setup Docker: " + getContainerName(pipelineLaunchUID, "setup")
-    print "Shared Volume: " + getVolumeName(pipelineLaunchUID)
+    if volumeMount is None:
+        print "Volume: " + getVolumeName(pipelineLaunchUID)
+    else:
+        print "Shared Volume: " + volumeMount
     print "**********************************************\n\n"
     print "Complete!\n\n"
