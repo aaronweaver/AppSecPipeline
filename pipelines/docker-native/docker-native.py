@@ -11,6 +11,9 @@ import shutil
 
 baseLocation = "../../controller"
 langFile = None
+color = 0
+tcolors = ('\033[90m', '\033[92m', '\033[93m', '\033[94m', '\033[95m', '\033[96m', '\033[33m', '\033[34m', '\033[35m', '\033[36m')
+ENDC = '\033[0m'
 
 def substituteArgs(args, command):
 
@@ -70,6 +73,7 @@ def launcherControl(client, docker, tool, command, pipelineLaunchUID, toolProfil
         checkLanguages(getContainerName(pipelineLaunchUID, tool))
 
 def launchContainer(client, docker, tool, command, pipelineLaunchUID, tty=False, volumePath=None):
+    global color
     #Shared volume for reporting
     volumeToUse = getVolumeName(pipelineLaunchUID)
     if volumePath is not None:
@@ -85,7 +89,12 @@ def launchContainer(client, docker, tool, command, pipelineLaunchUID, tty=False,
     #if tty don't wait for logs as it will "hang"
     if tty == False:
         for line in container.logs(stream=True):
-            print tool.ljust(15) + " | " + line.strip()
+            print tcolors[color] + tool.ljust(15) + " | \033[0m " + line.strip()
+        if color < len(tcolors):
+            color = color + 1
+        else:
+            color = 0
+    return container
 
 def createVolume(pipelineLaunchUID):
     volumeName = getVolumeName(pipelineLaunchUID)
@@ -131,7 +140,7 @@ def checkLanguages(containerName):
     tar.close()
 
     with open(os.path.join(targetDirectory,"languages.json"), 'r') as f:
-        langFile = f.read().lower() 
+        langFile = f.read().lower()
 
     os.remove(tarLangFile)
     shutil.rmtree(targetDirectory)
@@ -159,11 +168,13 @@ if __name__ == '__main__':
     sourceDir = args.dir
     cleanUp = args.clean
     volumeMount = args.volume
+    sourceContainer = None
 
     masterYaml = getYamlConfig("master.yaml")
     toolYaml = getYamlConfig("secpipeline-config.yaml")
 
     client = docker.from_env()
+    lowLevelclient = docker.APIClient(base_url='unix://var/run/docker.sock')
 
     #Unique ID for each "build"
     pipelineLaunchUID = str(uuid.uuid4())
@@ -172,42 +183,49 @@ if __name__ == '__main__':
         print getContainerName(pipelineLaunchUID, "setup")
         print "Copying folder: %s to /var/appsecpipeline" % sourceDir
         #Start a container for copying the folder
-        launchContainer(client, "appsecpipeline/base", "setup", "/bin/bash", pipelineLaunchUID, tty=True, volumePath=volumeMount)
+        sourceContainer = launchContainer(client, "appsecpipeline/base", "setup", "/bin/bash", pipelineLaunchUID, tty=True, volumePath=volumeMount)
         copytoContainer(getContainerName(pipelineLaunchUID, "setup"), sourceDir, "/var/appsecpipeline")
         #Stop the setup container
-        lowLevelclient = docker.APIClient(base_url='unix://var/run/docker.sock')
         lowLevelclient.stop(container=getContainerName(pipelineLaunchUID, "setup"))
 
-    for tool in masterYaml["profiles"][profile]:
-        toolName = tool['tool']
-        toolProfile = tool['profile']
+    if profile in masterYaml["profiles"]:
+        for tool in masterYaml["profiles"][profile]:
+            toolName = tool['tool']
+            toolProfile = tool['profile']
 
-        print "***** Tool Details *****"
-        toolDetails = toolYaml[toolName]
-        command = "%s %s" % (toolDetails["profiles"][toolProfile], toolDetails["commands"]["exec"])
-        toolArgs = substituteArgs(remaining_argv, command)
-        dockerCommand = getCommand(toolName, toolProfile, toolArgs)
+            print "***** Tool Details *****"
+            toolDetails = toolYaml[toolName]
+            command = "%s %s" % (toolDetails["profiles"][toolProfile], toolDetails["commands"]["exec"])
+            toolArgs = substituteArgs(remaining_argv, command)
+            dockerCommand = getCommand(toolName, toolProfile, toolArgs)
 
-        volume = createVolume(pipelineLaunchUID)
-        launcherControl(client, toolDetails["docker"], toolName, dockerCommand, pipelineLaunchUID, toolDetails, volumePath=volumeMount)
+            volume = createVolume(pipelineLaunchUID)
+            launcherControl(client, toolDetails["docker"], toolName, dockerCommand, pipelineLaunchUID, toolDetails, volumePath=volumeMount)
 
-    if cleanUp:
-        #Clean up time
-        print "Pausing for containers to stop..."
-        time.sleep(8)
+        if cleanUp:
+            #Clean up time
+            if sourceContainer:
+                print "Pausing for containers to stop..."
+                sourceContainer.reload()
+                print sourceContainer.status
+                while sourceContainer.status != 'exited':
+                    sourceContainer.reload()
+                    print sourceContainer.status
 
-        #Clean up Dockers
-        client.containers.prune(filters={"label": "appsecpipeline", "label": pipelineLaunchUID})
+            #Clean up Dockers
+            client.containers.prune(filters={"label": "appsecpipeline", "label": pipelineLaunchUID})
 
-        #Remove temporary shared folder
-        deleteVolume(volume)
+            #Remove temporary shared folder
+            deleteVolume(volume)
 
-    print "**********************************************"
-    print "Container UUID Prefix: " + pipelineLaunchUID
-    print "Setup Docker: " + getContainerName(pipelineLaunchUID, "setup")
-    if volumeMount is None:
-        print "Volume: " + getVolumeName(pipelineLaunchUID)
+        print "**********************************************"
+        print "Container UUID Prefix: " + pipelineLaunchUID
+        print "Setup Docker: " + getContainerName(pipelineLaunchUID, "setup")
+        if volumeMount is None:
+            print "Volume: " + getVolumeName(pipelineLaunchUID)
+        else:
+            print "Shared Volume: " + volumeMount
+        print "**********************************************\n\n"
+        print "Complete!\n\n"
     else:
-        print "Shared Volume: " + volumeMount
-    print "**********************************************\n\n"
-    print "Complete!\n\n"
+        print "Profile not found."
