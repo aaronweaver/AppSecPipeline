@@ -79,9 +79,10 @@ def process_findings(dd, engagement_id, dir, build=None):
             #Test for file extension
             if file.lower().endswith(('.json', '.csv','.txt','.js', '.xml')):
                 test_id = processFiles(dd, engagement_id, file)
-                #Test id's accumulated to query later to find out what was found in this build
+
                 if test_id is not None:
-                    test_ids.append(str(test_id))
+                    if str(test_id).isdigit():
+                        test_ids.append(str(test_id))
             else:
                 print "Skipped file, extension not supported: " + file + "\n"
     return ','.join(test_ids)

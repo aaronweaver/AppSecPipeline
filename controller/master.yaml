@@ -45,6 +45,8 @@ profiles:
      profile: "all"
    - tool: "dependency-check"
      profile: "all"
+   - tool: "defectdojo"
+     profile: "all"
 
   analyze-code:
    - tool: "cloc"

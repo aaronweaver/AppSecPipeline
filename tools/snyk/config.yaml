@@ -9,9 +9,9 @@ snyk:
   url: https://snyk.io/
   documentation: https://snyk.io/docs/
   parameters:
-   - "API_TOKEN"
+   - "SNYK_API_TOKEN"
   commands:
-    pre: "snyk auth $API_TOKEN"
+    pre: "snyk auth $SNYK_API_TOKEN"
     exec: "snyk"
     shell: True
     post:

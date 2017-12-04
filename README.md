@@ -73,9 +73,9 @@ Create a shared report directory
 docker volume create --name appsecpipeline_local -o type=none -o device=/Users/aweaver/git/AppSecPipelineReports/
 ```
 
-Testing the AppSecPipeline
+### Testing the AppSecPipeline
 
-Running a dynamic scan:
+## Running a dynamic scan:
 ```
 export DOJO_HOST=http://defectdojo.appsec.pipeline:8000
 export DOJO_API_KEY=<user_id>:<guid>
@@ -83,3 +83,18 @@ export DOJO_PRODUCT_ID=1
 
 cd pipelines/docker-native
 python docker-native.py URL=http://bodgeit.appsec.pipeline:8080/bodgeit LOC=. DOJO_HOST=$DOJO_HOST DOJO_API_KEY=$DOJO_API_KEY DOJO_PRODUCT_ID=$DOJO_PRODUCT_ID -p dynamic -v /Users/aweaver/git/AppSecPipelineReports
+```
+
+## Running a static scan:
+```
+export DOJO_HOST=http://defectdojo.appsec.pipeline:8000
+export DOJO_API_KEY=<user_id>:<guid>
+export DOJO_PRODUCT_ID=1
+export SNYK_API_TOKEN=<api_token>
+
+#Git clone a repo, for example:
+git clone https://github.com/psiinon/bodgeit.git
+
+cd pipelines/docker-native
+python docker-native.py LOC=. DOJO_HOST=$DOJO_HOST DOJO_API_KEY=$DOJO_API_KEY DOJO_PRODUCT_ID=$DOJO_PRODUCT_ID -p static -v /Path/To/Source Code/
+```

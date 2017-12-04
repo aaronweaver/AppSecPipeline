@@ -91,7 +91,7 @@ def launchContainer(client, docker, tool, command, pipelineLaunchUID, tty=False,
     containerName = getContainerName(pipelineLaunchUID, tool)
     container = client.containers.run(docker, command, network='appsecpipeline_default', working_dir='/var/appsecpipeline', name=containerName, labels=["appsecpipeline",pipelineLaunchUID], detach=True, volumes=appsecpipelineVolume, tty=tty)
 
-    print "\033[95m Launching Image: %s %s\n Container Name: %s with a Container ID of %s" % (docker, ENDC, containerName, container.id)
+    print "\033[95mLaunching Image: %s %s\nContainer Name: %s with a Container ID of %s" % (docker, ENDC, containerName, container.id)
     #if tty don't wait for logs as it will "hang"
     if tty == False:
         for line in container.logs(stream=True):
