@@ -12,7 +12,7 @@ import shutil
 baseLocation = "../../controller"
 langFile = None
 color = 0
-tcolors = ('\033[90m', '\033[92m', '\033[93m', '\033[94m', '\033[95m', '\033[96m', '\033[33m', '\033[34m', '\033[35m', '\033[36m')
+tcolors = ('\033[90m', '\033[93m', '\033[94m', '\033[95m', '\033[96m', '\033[33m', '\033[34m', '\033[35m', '\033[36m')
 ENDC = '\033[0m'
 
 def substituteArgs(args, command):
@@ -63,6 +63,8 @@ def launcherControl(client, docker, tool, command, pipelineLaunchUID, toolProfil
             runContainer = False
     elif toolType == "code-analyzer":
         runContainer = True
+    elif toolType == "collector":
+        runContainer = True
 
     if runContainer:
         launchContainer(client, docker, tool, command, pipelineLaunchUID, volumePath=volumePath)
@@ -78,6 +80,10 @@ def launchContainer(client, docker, tool, command, pipelineLaunchUID, tty=False,
     volumeToUse = getVolumeName(pipelineLaunchUID)
     if volumePath is not None:
         volumeToUse = volumePath
+        #Ensure volumePath exists locally
+        if os.path.exists(volumePath) == False:
+            print "Source Volume Path does not exist: %s, exiting." % volumePath
+            exit()
 
     appsecpipelineVolume = {volumeToUse: {'bind': '/var/appsecpipeline', 'mode': 'rw'}}
 
@@ -85,7 +91,7 @@ def launchContainer(client, docker, tool, command, pipelineLaunchUID, tty=False,
     containerName = getContainerName(pipelineLaunchUID, tool)
     container = client.containers.run(docker, command, network='appsecpipeline_default', working_dir='/var/appsecpipeline', name=containerName, labels=["appsecpipeline",pipelineLaunchUID], detach=True, volumes=appsecpipelineVolume, tty=tty)
 
-    print "Launching Image: %s Container Name: %s with a Container ID of %s" % (docker, containerName, container.id)
+    print "\033[95m Launching Image: %s %s\n Container Name: %s with a Container ID of %s" % (docker, ENDC, containerName, container.id)
     #if tty don't wait for logs as it will "hang"
     if tty == False:
         for line in container.logs(stream=True):
@@ -147,12 +153,29 @@ def checkLanguages(containerName):
 
 def copytoContainer(containerName, source, dest):
     tarstream = io.BytesIO()
+
+    if os.path.exists(source) == False:
+        print "Source folder direction does not exist: %s, exiting." % source
+        exit()
+
     with tarfile.open(fileobj=tarstream, mode='w') as tarfile_:
         tarfile_.add(source, arcname=os.path.basename(source))
 
     tarstream.seek(0)
     client = docker.APIClient(base_url='unix://var/run/docker.sock')
     client.put_archive(container=containerName, path=dest, data=tarstream)
+
+def checkNetwork():
+    networkName = "appsecpipeline_default"
+    appNetwork = client.networks.list(networkName)
+    if appNetwork is None:
+        print "Creating network: %s" % networkName
+        createNetwork(networkName)
+    else:
+        print "Network exists: %s " % networkName
+
+def createNetwork(networkName):
+    client.networks.create(networkName, driver="bridge")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
@@ -173,8 +196,12 @@ if __name__ == '__main__':
     masterYaml = getYamlConfig("master.yaml")
     toolYaml = getYamlConfig("secpipeline-config.yaml")
 
+    #Setup docker connection
     client = docker.from_env()
     lowLevelclient = docker.APIClient(base_url='unix://var/run/docker.sock')
+
+    #Check shared network
+    checkNetwork()
 
     #Unique ID for each "build"
     pipelineLaunchUID = str(uuid.uuid4())
