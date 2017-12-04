@@ -21,7 +21,7 @@ appspider:
    - "RUN-SCAN-POLL"
   commands:
     pre:
-    exec: "python /usr/bin/tools/appspider/AppSpider.py --url $url --username $username --password $password --admin-username $admin-username --admin-password $admin-password --client $client"
+    exec: "python /usr/bin/appsecpipeline/tools/appspider/AppSpider.py --url $url --username $username --password $password --admin-username $admin-username --admin-password $admin-password --client $client"
     shell: False
     report: "--output-file='{reportname}'"
     reportname: "VulnerabilitiesSummary.xml"

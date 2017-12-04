@@ -18,7 +18,7 @@ profiles:
    - tool: "defectdojo"
      profile: "all"
 
-  dojo:
+  defectdojo:
    - tool: "defectdojo"
      profile: "all"
 

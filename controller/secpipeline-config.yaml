@@ -21,7 +21,7 @@ appspider:
    - "RUN-SCAN-POLL"
   commands:
     pre:
-    exec: "python /usr/bin/tools/appspider/AppSpider.py --url $url --username $username --password $password --admin-username $admin-username --admin-password $admin-password --client $client"
+    exec: "python /usr/bin/appsecpipeline/tools/appspider/AppSpider.py --url $url --username $username --password $password --admin-username $admin-username --admin-password $admin-password --client $client"
     shell: False
     report: "--output-file='{reportname}'"
     reportname: "VulnerabilitiesSummary.xml"
@@ -186,7 +186,7 @@ defectdojo:
     junit:
   profiles:
     all: "--api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID"
-    all_proxy: "--proxy=$PROXY--api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID"
+    all_proxy: "--proxy=$DOJO_PROXY --api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID"
 dependency-check:
   version: AppSecPipeline 0.5.0
   name: "dependency-check"
@@ -217,8 +217,8 @@ dependency-check:
     - ".net"
     - "python"
   profiles:
-    #Runs the full depedency scan
-    all: "--project $PROJECT --scan $LOC"
+    #Runs the full dependency scan, only updates every week
+    all: "--project $PROJECT --scan $LOC --cveValidForHours 168"
 nikto:
   version: AppSecPipeline 0.5.0
   tags:
@@ -239,7 +239,7 @@ nikto:
     exec: "nikto -h $URL"
     report: "-output '{reportname}'"
     reportname: "{timestamp}.xml"
-    post: "python /usr/bin/tools/nikto/parser.py -f '{reportname}'"
+    post: "python /usr/bin/appsecpipeline/tools/nikto/parser.py -f '{reportname}'"
     junit: "junit.py -f '{reportname}' -t nikto"
   profiles:
     all: ""

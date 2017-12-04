@@ -42,20 +42,44 @@ Rerun or rebuild Jenkins jobs by running jenkins.bash.
 The docker compose environment sets up Jenkins based off the Jenkins build above, DefectDojo and the BodgeIt app for testing the tools.
 
 ```
-cd dockers/app/
-docker-compose up
+cd dockers/appsecpipeline
+launchenv.sh
 ```
+Accessing from local machine:
 
 DefectDojo: http://localhost:8000
 BodgeIt: http://localhost:9000/bodgeit
 Jenkins: http://localhost:8080
 
+Accessing from docker container:
+
+DefectDojo: http://defectdojo.appsec.pipeline:8000
+BodgeIt: http://bodgeit.appsec.pipeline:9000/bodgeit
+Jenkins: http://jenkins.appsec.pipeline:8080
+
 Startup a docker tool for testing purposes:
 
 ```
-docker run --rm --name appsecpipeline -it --network=appsecpipeline_default -v ${PWD}/tools:/usr/bin/tools -v ${PWD}/controller/:/usr/bin/appsecpipeline  -v appsecpipeline:/var/appsecpipeline appsecpipeline/base-tools /bin/bash
+docker run --rm --name appsecpipeline -it --network=appsecpipeline_default -v ${PWD}/tools:/usr/bin/appsecpipeline/tools -v ${PWD}/controller/:/usr/bin/appsecpipeline  -v appsecpipeline:/var/appsecpipeline appsecpipeline/base-tools /bin/bash
+
 ```
 Deleting containers
 ```
 docker system prune --filter label=appsecpipeline
 ```
+
+Create a shared report directory
+```
+docker volume create --name appsecpipeline_local -o type=none -o device=/Users/aweaver/git/AppSecPipelineReports/
+```
+
+Testing the AppSecPipeline
+
+Running a dynamic scan:
+```
+export DOJO_HOST=http://defectdojo.appsec.pipeline:8000
+export DOJO_API_KEY=<user_id>:<guid>
+export DOJO_PRODUCT_ID=1
+
+cd pipelines/docker-native
+python docker-native.py URL=http://bodgeit.appsec.pipeline:8080/bodgeit LOC=. DOJO_HOST=$DOJO_HOST DOJO_API_KEY=$DOJO_API_KEY DOJO_PRODUCT_ID=$DOJO_PRODUCT_ID -p dynamic -v /Users/aweaver/git/AppSecPipelineReports

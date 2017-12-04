@@ -28,5 +28,5 @@ dependency-check:
     - ".net"
     - "python"
   profiles:
-    #Runs the full depedency scan
-    all: "--project $PROJECT --scan $LOC"
+    #Runs the full dependency scan, only updates every week
+    all: "--project $PROJECT --scan $LOC --cveValidForHours 168"

@@ -104,7 +104,7 @@ def processFiles(dd, engagement_id, file, scanner=None, build=None):
         print "Uploading " + tool + " scan: " + file
         test_id = dd.upload_scan(engagement_id, scanner, file, "true", dojoDate, build)
         if test_id.success == False:
-            print "An error occured while uploading the scan: " + test_id.message + "\n"
+            print "An error occured while uploading the scan: " + test_id.message
         else:
             print "Succesful upload, TestID: " + str(test_id) + "\n"
     else:
