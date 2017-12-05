@@ -168,7 +168,8 @@ def copytoContainer(containerName, source, dest):
 def checkNetwork():
     networkName = "appsecpipeline_default"
     appNetwork = client.networks.list(networkName)
-    if appNetwork is None:
+    appNetwork
+    if len(appNetwork) == 0:
         print "Creating network: %s" % networkName
         createNetwork(networkName)
     else:

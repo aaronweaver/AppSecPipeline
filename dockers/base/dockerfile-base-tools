@@ -3,7 +3,8 @@ FROM appsecpipeline/base
 RUN apt-get install -y \
     nikto \
     cloc \
-    unzip
+    unzip \
+    nmap
 
 #Python dependency installs
 RUN pip install -U bandit
@@ -20,5 +21,12 @@ RUN echo '#!/bin/bash\n\ncd /usr/share/arachni/bin/ && ./arachni_reporter "$@"' 
 
 RUN chmod +x /usr/bin/arachni
 RUN chmod +x /usr/bin/arachni_reporter
+
+#Install SSLLabs Scanner
+ARG SSLLAB=1.4.0
+
+RUN wget -qO- https://github.com/ssllabs/ssllabs-scan/releases/download/v${SSLLAB}/ssllabs-scan_${SSLLAB}-linux64.tgz | tar xvz -C /usr/bin --strip-components=1
+
+
 #Jenkins user need write permissions on component cache
 RUN chown -R jenkins: /usr/share/arachni/system/

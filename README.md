@@ -61,7 +61,6 @@ Startup a docker tool for testing purposes:
 
 ```
 docker run --rm --name appsecpipeline -it --network=appsecpipeline_default -v ${PWD}/tools:/usr/bin/appsecpipeline/tools -v ${PWD}/controller/:/usr/bin/appsecpipeline  -v appsecpipeline:/var/appsecpipeline appsecpipeline/base-tools /bin/bash
-
 ```
 Deleting containers
 ```

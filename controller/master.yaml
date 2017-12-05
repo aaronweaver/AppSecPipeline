@@ -18,6 +18,22 @@ profiles:
    - tool: "defectdojo"
      profile: "all"
 
+  zap:
+   - tool: "zap"
+     profile: "quick"
+   - tool: "defectdojo"
+     profile: "all"
+
+  ssllabs:
+   - tool: "ssllabs"
+     profile: "all"
+
+  nmap:
+   - tool: "nmap"
+     profile: "all"
+   - tool: "defectdojo"
+     profile: "all"
+
   defectdojo:
    - tool: "defectdojo"
      profile: "all"

@@ -254,6 +254,34 @@ nikto:
     command_exec: "-Tuning 8"
     sqli: "-Tuning 9"
     identification: "-Tuning b"
+nmap:
+  version: AppSecPipeline 0.5.0
+  tags:
+    - "Dyanmic Scanner"
+  type: "dynamic"
+  scan_type: "infrastructure"
+  name: "nmap"
+  icon-sm:
+  icon-lg:
+  description: "Nmap is a free and open source (license) utility for network discovery and security auditing. Many systems and network administrators also find it useful for tasks such as network inventory, managing service upgrade schedules, and monitoring host or service uptime. Nmap uses raw IP packets in novel ways to determine what hosts are available on the network, what services (application name and version) those hosts are offering, what operating systems (and OS versions) they are running, what type of packet filters/firewalls are in use, and dozens of other characteristics. It was designed to rapidly scan large networks, but works fine against single hosts."
+  url: https://nmap.org/
+  documentation: https://nmap.org/book/man.html
+  docker: "appsecpipeline/base-tools"
+  parameters:
+   - "URL"
+  commands:
+    pre:
+    exec: "nmap"
+    shell: False
+    report: "-oX {reportname}"
+    reportname: "{timestamp}.xml"
+    post:
+    junit:
+  credentials:
+    simple:
+  profiles:
+    all: "$URL"
+    quick: " "
 retirejs:
   version: AppSecPipeline 0.5.0
   name: retirejs
@@ -292,9 +320,9 @@ snyk:
   url: https://snyk.io/
   documentation: https://snyk.io/docs/
   parameters:
-   - "API_TOKEN"
+   - "SNYK_API_TOKEN"
   commands:
-    pre: "snyk auth $API_TOKEN"
+    pre: "snyk auth $SNYK_API_TOKEN"
     exec: "snyk"
     shell: True
     post:
@@ -309,3 +337,64 @@ snyk:
     - "python"
   profiles:
     all: "test ."
+ssllabs:
+  version: AppSecPipeline 0.5.0
+  tags:
+    - "Dyanmic Scanner"
+  type: "dynamic"
+  scan_type: "server"
+  name: "ssllabs"
+  icon-sm:
+  icon-lg:
+  description: "This tool is a command-line client for the SSL Labs APIs, designed for automated and/or bulk testing."
+  url: https://github.com/ssllabs/ssllabs-scan
+  documentation: https://sourceforge.net/p/ssllabs/mailman/ssllabs-devel/
+  docker: "appsecpipeline/base-tools"
+  parameters:
+   - "URL"
+  commands:
+    pre:
+    exec: "ssllabs-scan"
+    shell: False
+    report: ""
+    reportname: ""
+    post:
+    junit:
+  credentials:
+    simple:
+  profiles:
+    all: "-usecache -verbosity=DEBUG -json-flat $URL"
+    quick: " "
+    grade: "-usecache -grade -json-flat $URL"
+zap:
+  version: AppSecPipeline 0.5.0
+  tags:
+    - "Dyanmic Scanner"
+  type: "dynamic"
+  scan_type: "web"
+  name: "zap"
+  icon-sm:
+  icon-lg:
+  description: "The OWASP Zed Attack Proxy (ZAP) is one of the world’s most popular free security tools and is actively maintained by hundreds of international volunteers*. It can help you automatically find security vulnerabilities in your web applications while you are developing and testing your applications. Its also a great tool for experienced pentesters to use for manual security testing."
+  url: https://github.com/zaproxy/zaproxy
+  documentation: https://github.com/zaproxy/zaproxy/wiki
+  docker: "appsecpipeline/zap"
+  parameters:
+   - "URL"
+   - "LOGIN_URL"
+   - "LOGIN_PARMS"
+   - "LOGIN_SUCCESS"
+   - "LOGIN_LOGOUT_PATTERN"
+  commands:
+    pre:
+    exec: "python /zap/zap-baseline.py -t $URL"
+    shell: False
+    report: "-x {reportname}"
+    reportname: "{timestamp}.xml"
+    post:
+    junit:
+  credentials:
+    simple:
+  profiles:
+    all: ""
+    quick: " "

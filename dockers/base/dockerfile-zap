@@ -1,4 +1,6 @@
-FROM node
+FROM owasp/zap2docker-stable
+
+USER root
 
 RUN apt-get update \
     && apt-get upgrade -y \
@@ -10,23 +12,21 @@ RUN apt-get update \
     python2.7 \
     python2.7-dev
 
-#Install Retire.js
-RUN npm install -g retire
-
-#Install Synk
-RUN npm install -g snyk
-
 #Python dependency installs
 RUN pip install pyyaml
 RUN pip install requests
 RUN pip install junit_xml_output
 RUN pip install defectdojo_api
 
+#Copy pipeline executor to bin
 RUN mkdir /usr/bin/appsecpipeline/
 ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
 COPY tools /usr/bin/appsecpipeline/tools
+COPY tools/zap/zap-baseline.py /zap/
 
 RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
 RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
 
 RUN useradd -o -u 1000 jenkins
+
+USER zap

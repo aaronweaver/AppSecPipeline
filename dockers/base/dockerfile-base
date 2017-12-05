@@ -24,11 +24,6 @@ RUN mkdir /usr/bin/appsecpipeline/
 ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
 COPY tools /usr/bin/appsecpipeline/tools
 
-#Copy pipeline executor to bin Will deprecate once scripts are moved
-#COPY controller/launch.py /usr/bin/
-#COPY controller/junit.py /usr/bin/
-#COPY tools /usr/bin/tools
-
 RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
 RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
 
