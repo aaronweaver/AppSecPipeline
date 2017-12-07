@@ -166,7 +166,7 @@ defectdojo:
     - "Report Consumer"
   type: "collector"
   description: "DefectDojo is a security program and vulnerability management tool. DefectDojo allows you to manage your application security program, maintain product and application information, schedule scans, triage vulnerabilities and push findings into defect trackers. Consolidate your findings into one source of truth with DefectDojo."
-  docker: "appsecpipeline/base-tools"
+  docker: "appsecpipeline/base"
   url: https://github.com/OWASP/django-DefectDojo
   documentation: http://defectdojo.readthedocs.io/en/latest/
   parameters:
@@ -174,6 +174,7 @@ defectdojo:
    - "DOJO_HOST"
    - "DOJO_PRODUCT_ID"
    - "DOJO_PROXY"
+   - "BUILD_ID"
   commands:
     parameters: "dir : Directory of security tool output."
     pre:
@@ -185,8 +186,8 @@ defectdojo:
     post:
     junit:
   profiles:
-    all: "--api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID"
-    all_proxy: "--proxy=$DOJO_PROXY --api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID"
+    all: "--api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID --build_id=$BUILD_ID"
+    all_proxy: "--proxy=$DOJO_PROXY --api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID --build_id=$BUILD_ID"
 dependency-check:
   version: AppSecPipeline 0.5.0
   name: "dependency-check"
@@ -337,6 +338,33 @@ snyk:
     - "python"
   profiles:
     all: "test ."
+spotbugs:
+  version: AppSecPipeline 0.5.0
+  name: spotbugs
+  tags:
+    - "Static Code Analyzer"
+  type: "static"
+  description: "SpotBugs is a program which uses static analysis to look for bugs in Java code."
+  docker: "appsecpipeline/sast"
+  url: https://spotbugs.github.io/
+  documentation: http://spotbugs-in-kengo-toda.readthedocs.io/en/latest/index.html
+  parameters:
+   - "COMPILE_LOC"
+  commands:
+    parameters: "COMPILE_LOC : Location of jar file. LOC=/temp/jar"
+    pre:
+    exec: "spotbugs -textui"
+    shell: False
+    post:
+    report: "-xml -output {reportname} $COMPILE_LOC"
+    reportname: "{timestamp}.xml"
+    post:
+    junit:
+  languages:
+    - "java"
+  profiles:
+    #Runs the full bandit scan
+    all: "-effort:max"
 ssllabs:
   version: AppSecPipeline 0.5.0
   tags:
@@ -355,9 +383,9 @@ ssllabs:
   commands:
     pre:
     exec: "ssllabs-scan"
-    shell: False
-    report: ""
-    reportname: ""
+    shell: True
+    report: "> {reportname}"
+    reportname: "{timestamp}.json"
     post:
     junit:
   credentials:

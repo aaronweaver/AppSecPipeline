@@ -9,7 +9,7 @@ services:
         aliases:
           - bodgeit.appsec.pipeline
   defectdojo:
-    image: appsecpipeline/django-defectdojo:latest
+    image: appsecpipeline/greg-django-defectdojo:latest
     ports:
       - "8000:8000"
     networks:

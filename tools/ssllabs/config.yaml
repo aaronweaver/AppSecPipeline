@@ -16,9 +16,9 @@ ssllabs:
   commands:
     pre:
     exec: "ssllabs-scan"
-    shell: False
-    report: ""
-    reportname: ""
+    shell: True
+    report: "> {reportname}"
+    reportname: "{timestamp}.json"
     post:
     junit:
   credentials:

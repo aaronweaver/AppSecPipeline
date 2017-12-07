@@ -6,7 +6,7 @@ defectdojo:
     - "Report Consumer"
   type: "collector"
   description: "DefectDojo is a security program and vulnerability management tool. DefectDojo allows you to manage your application security program, maintain product and application information, schedule scans, triage vulnerabilities and push findings into defect trackers. Consolidate your findings into one source of truth with DefectDojo."
-  docker: "appsecpipeline/base-tools"
+  docker: "appsecpipeline/base"
   url: https://github.com/OWASP/django-DefectDojo
   documentation: http://defectdojo.readthedocs.io/en/latest/
   parameters:
@@ -14,6 +14,7 @@ defectdojo:
    - "DOJO_HOST"
    - "DOJO_PRODUCT_ID"
    - "DOJO_PROXY"
+   - "BUILD_ID"
   commands:
     parameters: "dir : Directory of security tool output."
     pre:
@@ -25,5 +26,5 @@ defectdojo:
     post:
     junit:
   profiles:
-    all: "--api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID"
-    all_proxy: "--proxy=$DOJO_PROXY --api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID"
+    all: "--api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID --build_id=$BUILD_ID"
+    all_proxy: "--proxy=$DOJO_PROXY --api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID --build_id=$BUILD_ID"

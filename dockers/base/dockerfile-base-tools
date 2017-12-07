@@ -27,6 +27,5 @@ ARG SSLLAB=1.4.0
 
 RUN wget -qO- https://github.com/ssllabs/ssllabs-scan/releases/download/v${SSLLAB}/ssllabs-scan_${SSLLAB}-linux64.tgz | tar xvz -C /usr/bin --strip-components=1
 
-
 #Jenkins user need write permissions on component cache
 RUN chown -R jenkins: /usr/share/arachni/system/

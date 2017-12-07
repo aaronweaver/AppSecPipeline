@@ -42,11 +42,12 @@ def dojo_connection(host, api_key, user, proxy=None):
     # 3. Call this script to load scan data, specifying scanner type
     # 4. Script returns along with a pass or fail results: Example: 2 new critical vulns, 1 low out of 10 vulnerabilities
 
-def return_engagement(dd, product_id, user):
+def return_engagement(dd, product_id, user, build_id=None):
     engagement_id = None
     #Specify the product id
     product_id = product_id
 
+    """
     # Check for a CI/CD engagement_id
     engagements = dd.list_engagements(product_in=product_id, status="In Progress")
 
@@ -58,16 +59,22 @@ def return_engagement(dd, product_id, user):
         print "An error occurred: " + engagements.message
 
     if engagements.success and engagement_id == None:
-        start_date = datetime.now()
-        end_date = start_date+timedelta(days=180)
-        users = dd.list_users(user)
-        user_id = None
+    """
 
-        if users.success:
-            user_id = users.data["objects"][0]["id"]
+    start_date = datetime.now()
+    end_date = start_date+timedelta(days=1)
+    users = dd.list_users(user)
+    user_id = None
 
-        engagement_id = dd.create_engagement("Recurring CI/CD Integration", product_id, str(user_id),
-        "In Progress", start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
+    if users.success:
+        user_id = users.data["objects"][0]["id"]
+
+    engagementText = "CI/CD Integration"
+    if build_id is not None:
+        engagementText = engagementText + " - Build #" + build_id
+
+    engagement_id = dd.create_engagement(engagementText, product_id, str(user_id),
+    "In Progress", start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
 
     return engagement_id
 
@@ -217,7 +224,7 @@ def summary(dd, engagement_id, test_ids, max_critical=0, max_high=0, max_medium=
             print
             print"=============================================="
 
-            strFail = ""
+            strFail = None
             if max_critical is not None:
                 if sum_new_findings[4] > max_critical:
                     strFail =  "Build Failed: Max Critical"
@@ -267,7 +274,7 @@ class Main:
         parser.add_argument('--file', help="Scanner file", required=False)
         parser.add_argument('--dir', help="Scanner directory, needs to have the scanner name with the scan file in the folder. Ex: reports/nmap/nmap.csv", required=False, default="reports")
         parser.add_argument('--scanner', help="Type of scanner", required=False)
-        parser.add_argument('--build', help="Build ID", required=False)
+        parser.add_argument('--build_id', help="Build ID", required=False)
         parser.add_argument('--engagement', help="Engagement ID (optional)", required=False)
         parser.add_argument('--critical', help="Maximum new critical vulns to pass the build.", required=False)
         parser.add_argument('--high', help="Maximum new high vulns to pass the build.", required=False)
@@ -287,7 +294,7 @@ class Main:
         max_critical = args["critical"]
         max_high = args["high"]
         max_medium = args["medium"]
-        build = args["build"]
+        build_id = args["build_id"]
         proxy = args["proxy"]
 
         if dir is not None or file is not None:
@@ -298,7 +305,7 @@ class Main:
             user = apiParsed[0]
             api_key = apiParsed[1]
             dd = dojo_connection(host, api_key, user, proxy)
-            engagement_id = return_engagement(dd, product_id, user)
+            engagement_id = return_engagement(dd, product_id, user, build_id=build_id)
             test_ids = None
             if file is not None:
                 if scanner is not None:
@@ -306,8 +313,10 @@ class Main:
                 else:
                     print "Scanner type must be specified for a file import. --scanner"
             else:
-                test_ids = process_findings(dd, engagement_id, dir, build)
+                test_ids = process_findings(dd, engagement_id, dir, build_id)
 
+            #Close the engagement
+            dd.close_engagement(engagement_id)
             summary(dd, engagement_id, test_ids, max_critical, max_high, max_medium)
         else:
             print "No file or directory to scan specified."

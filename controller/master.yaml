@@ -68,10 +68,8 @@ profiles:
    - tool: "cloc"
      profile: "all"
 
-#Global Import issue threshold
+#Global Import issue threshold, minimum severity
 finding-severity:
-  - "Critical"
-  - "High"
   - "Medium"
 
 #Define which profile to run based off of a code checkin
