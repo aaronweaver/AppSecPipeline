@@ -19,11 +19,11 @@ ssllabs:
     shell: True
     report: "> {reportname}"
     reportname: "{timestamp}.json"
-    post:
+    post: "python /usr/bin/appsecpipeline/tools/ssllabs/parser.py -f '{reportname}'"
     junit:
   credentials:
     simple:
   profiles:
-    all: "-usecache -verbosity=DEBUG -json-flat $URL"
+    all: "-usecache -verbosity=DEBUG $URL"
     quick: " "
-    grade: "-usecache -grade -json-flat $URL"
+    grade: "-usecache -grade $URL"

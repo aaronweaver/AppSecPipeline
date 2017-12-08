@@ -4,7 +4,8 @@ RUN apt-get install -y \
     nikto \
     cloc \
     unzip \
-    nmap
+    nmap \
+    wpscan
 
 #Python dependency installs
 RUN pip install -U bandit

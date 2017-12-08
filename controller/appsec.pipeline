@@ -1,23 +1,7 @@
 version: AppSecPipeline 0.5.0
 
-#Profile definition of what tools to run for a particular application
+#Sample appsec.pipeline file that could reside in an app repo
 profiles:
-  standard:
-   - tool: "cloc"
-     profile: "all"
-   - tool: "nikto"
-     profile: "fast"
-   - tool: "arachni"
-     profile: "fast"
-   - tool: "bandit"
-     profile: "tuned"
-   - tool: "brakeman"
-     profile: "tuned"
-   - tool: "retirejs"
-     profile: "all"
-   - tool: "defectdojo"
-     profile: "all"
-
   production:
    - tool: "nmap"
      profile: "all"
@@ -25,20 +9,6 @@ profiles:
      profile: "quick"
    - tool: "ssllabs"
      profile: "all"
-   - tool: "defectdojo"
-     profile: "all"
-
-  ssllabs:
-   - tool: "ssllabs"
-     profile: "all"
-
-  nmap:
-   - tool: "nmap"
-     profile: "comprehensive"
-   - tool: "defectdojo"
-     profile: "all"
-
-  defectdojo:
    - tool: "defectdojo"
      profile: "all"
 
@@ -71,10 +41,6 @@ profiles:
   analyze-code:
    - tool: "cloc"
      profile: "all"
-
-#Global Import issue threshold, minimum severity
-finding-severity:
-  - "Medium"
 
 #Define which profile to run based off of a code checkin
 deployment:
