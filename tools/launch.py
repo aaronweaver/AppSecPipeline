@@ -16,7 +16,7 @@ from subprocess import call
 from datetime import datetime
 import base64
 
-baseLocation = ""# "/usr/bin/appsecpipeline/"
+baseLocation = "/usr/bin/appsecpipeline/"
 reportsDir = "reports/"
 
 #Allow for dynamic arguments to support a wide variety of tools
