@@ -1,4 +1,4 @@
-ROM kalilinux/kali-linux-docker
+FROM kalilinux/kali-linux-docker
 
 ENV DEBIAN_FRONTEND noninteractive
 
