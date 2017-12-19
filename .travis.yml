@@ -25,10 +25,6 @@ env:
       DOCKER_FILE='base/dockerfile-zap'
       REPO='appsecpipeline/zap'
 
-before_script:
-  - export REPO='appsecpipeline/base'
-  - bash build/docker-hub.sh $TRAVIS_BRANCH $REPO $VERSION 'base/dockerfile-base'
-
 script:
   - |
     echo "Running PipelineBuild=$PIPELINE_BUILD"

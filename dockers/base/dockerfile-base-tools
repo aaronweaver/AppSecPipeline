@@ -1,10 +1,37 @@
-FROM appsecpipeline/base
+ROM kalilinux/kali-linux-docker
 
-RUN apt-get install -y \
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y \
+    build-essential \
+    ca-certificates \
+    git \
+    python-pip \
+    python2.7 \
+    python2.7-dev \
+    csvtool \
+    openjdk-9-jre-headless \
     nikto \
     cloc \
     unzip \
     nmap
+
+#Python dependency installs
+RUN pip install -U pyyaml
+RUN pip install -U requests
+RUN pip install -U junit_xml_output
+RUN pip install defectdojo_api
+
+RUN mkdir /usr/bin/appsecpipeline/
+ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
+COPY tools /usr/bin/appsecpipeline/tools
+
+RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
+RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
+
+RUN useradd -o -u 1000 jenkins
 
 #Python dependency installs
 RUN pip install -U bandit
