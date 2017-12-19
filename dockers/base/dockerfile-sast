@@ -11,12 +11,9 @@ RUN apt-get update \
     python-pip \
     python2.7 \
     python2.7-dev \
-    csvtool \
     openjdk-9-jre-headless \
-    nikto \
     cloc \
-    unzip \
-    nmap
+    unzip
 
 #Python dependency installs
 RUN pip install -U pyyaml
@@ -35,12 +32,6 @@ RUN useradd -o -u 1000 jenkins
 
 #Python dependency installs
 RUN pip install -U bandit
-
-#Python dependency installs
-RUN pip install -U bandit
-
-RUN apt-get install -y \
-    unzip
 
 #Install dependency checker
 RUN wget -O /tmp/dependency-check.zip https://bintray.com/jeremy-long/owasp/download_file?file_path=dependency-check-3.0.2-release.zip && \
