@@ -8,16 +8,25 @@ services:
 env:
   global:
     - VERSION=1.${TRAVIS_BUILD_NUMBER}
+    - PIPELINE_BUILD=basetools
+    - PIPELINE_BUILD=sast
 
 before_script:
   - export REPO='appsecpipeline/base'
-  - docker build -f dockers/base/dockerfile-base . -t appsecpipeline/base
-  - sh build/docker-hub.sh $TRAVIS_BRANCH $REPO $VERSION
+  - docker build -f dockers/base/dockerfile-base . -t $REPO
+  - bash build/docker-hub.sh $TRAVIS_BRANCH $REPO $VERSION
 
 script:
   - |
-    echo "Running test=$TEST"
-
-matrix:
-  - docker build -f dockers/base/dockerfile-base-tools . -t appsecpipeline/base-tools
-  - docker build -f dockers/base/dockerfile-sast . -t appsecpipeline/sast
+    echo "Running PipelineBuild=$PIPELINE_BUILD"
+    case "$PIPELINE_BUILD" in
+      basetools)
+        export REPO='appsecpipeline/base-tools'
+        docker build -f dockers/base/dockerfile-base-tools . -t $REPO
+        bash build/docker-hub.sh $TRAVIS_BRANCH $REPO $VERSION
+        ;;
+      sast)
+        export REPO='appsecpipeline/sast'
+        docker build -f dockers/base/dockerfile-sast . -t $REPO
+        bash build/docker-hub.sh $TRAVIS_BRANCH $REPO $VERSION
+    esac

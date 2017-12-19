@@ -1,3 +1,6 @@
+#!/bin/bash
+set -ev
+
 TRAVIS_BRANCH=$1
 REPO=$2
 VERSION=$3
