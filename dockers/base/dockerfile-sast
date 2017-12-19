@@ -36,37 +36,13 @@ RUN useradd -o -u 1000 jenkins
 #Python dependency installs
 RUN pip install -U bandit
 
-#Install Arachni, packaged apt-get install arachni doesn't work for some reason, hangs on BrowserCluster
-ARG VERSION=1.5.1
-ARG WEB_VERSION=0.5.12
-
-RUN mkdir /usr/share/arachni && \
-          wget -qO- https://github.com/Arachni/arachni/releases/download/v${VERSION}/arachni-${VERSION}-${WEB_VERSION}-linux-x86_64.tar.gz | tar xvz -C /usr/share/arachni --strip-components=1
-
-RUN echo '#!/bin/bash\n\ncd /usr/share/arachni/bin/ && ./arachni "$@"' > /usr/bin/arachni
-RUN echo '#!/bin/bash\n\ncd /usr/share/arachni/bin/ && ./arachni_reporter "$@"' > /usr/bin/arachni_reporter
-
-RUN chmod +x /usr/bin/arachni
-RUN chmod +x /usr/bin/arachni_reporter
-
-#Install SSLLabs Scanner
-ARG SSLLAB=1.4.0
-
-RUN wget -qO- https://github.com/ssllabs/ssllabs-scan/releases/download/v${SSLLAB}/ssllabs-scan_${SSLLAB}-linux64.tgz | tar xvz -C /usr/bin --strip-components=1
-
-#Jenkins user need write permissions on component cache
-RUN chown -R jenkins: /usr/share/arachni/system/
-USER jenkins
-
-ENTRYPOINT ["launch.py"]
-
 #Python dependency installs
 RUN pip install -U bandit
 
 RUN apt-get install -y \
     unzip
 
-#Install depedency checker
+#Install dependency checker
 RUN wget -O /tmp/dependency-check.zip https://bintray.com/jeremy-long/owasp/download_file?file_path=dependency-check-3.0.2-release.zip && \
     unzip /tmp/dependency-check.zip -d /usr/bin/ && \
     rm /tmp/dependency-check.zip
@@ -77,5 +53,7 @@ RUN /usr/bin/dependency-check/bin/dependency-check.sh --updateonly
 RUN chown -R jenkins: /usr/bin/dependency-check
 #Dependency check needs write permission on the data directory
 RUN chmod -R u=rwx /usr/bin/dependency-check/data
+
+USER jenkins
 
 ENTRYPOINT ["launch.py"]

@@ -108,3 +108,4 @@ controller/reports/
 
 tools/defectdojo/reports/
 jenkins-job-builder
+setenv.sh
