@@ -14,7 +14,7 @@ env:
       REPO='appsecpipeline/base-tools'
     - PIPELINE_BUILD=sast
       DOCKER_FILE='base/dockerfile-sast'
-      REPO='appsecpipeline/base-tools'
+      REPO='appsecpipeline/sast'
     - PIPELINE_BUILD=node
       DOCKER_FILE='base/dockerfile-node'
       REPO='appsecpipeline/node'
@@ -23,15 +23,13 @@ env:
       REPO='appsecpipeline/ruby'
     - PIPELINE_BUILD=zap
       DOCKER_FILE='base/dockerfile-zap'
-      REPO='appsecpipeline/node'
+      REPO='appsecpipeline/zap'
 
 before_script:
   - export REPO='appsecpipeline/base'
-  - docker build -f dockers/base/dockerfile-base . -t $REPO
-  - bash build/docker-hub.sh $TRAVIS_BRANCH $REPO $VERSION
+  - bash build/docker-hub.sh $TRAVIS_BRANCH $REPO $VERSION 'base/dockerfile-base'
 
 script:
   - |
     echo "Running PipelineBuild=$PIPELINE_BUILD"
-    docker build -f dockers/$DOCKER_FILE . -t $REPO
-    bash build/docker-hub.sh $TRAVIS_BRANCH $REPO $VERSION
+    bash build/docker-hub.sh $TRAVIS_BRANCH $REPO $VERSION $DOCKER_FILE
