@@ -8,7 +8,7 @@ profiles:
    - tool: "nikto"
      profile: "fast"
    - tool: "arachni"
-     profile: "fast"
+     profile: "xss"
    - tool: "bandit"
      profile: "tuned"
    - tool: "brakeman"
@@ -20,17 +20,23 @@ profiles:
 
   production:
    - tool: "nmap"
-     profile: "all"
+     profile: "quick"
    - tool: "zap"
      profile: "quick"
    - tool: "ssllabs"
      profile: "all"
+   - tool: "arachni"
+     profile: "xss"
    - tool: "defectdojo"
      profile: "all"
 
   ssllabs:
    - tool: "ssllabs"
      profile: "all"
+
+  wpscan:
+   - tool: "wpscan"
+     profile: "all_enumeration"
 
   nmap:
    - tool: "nmap"

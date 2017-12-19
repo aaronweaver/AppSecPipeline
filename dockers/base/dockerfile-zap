@@ -27,6 +27,10 @@ COPY tools/zap/zap-baseline.py /zap/
 RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
 RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
 
-RUN useradd -o -u 1000 jenkins
+#RUN useradd -o -u 1000 jenkins
+RUN usermod -u 1000 zap
+RUN groupmod -g 1000 zap
 
 USER zap
+
+ENTRYPOINT ["launch.py"]

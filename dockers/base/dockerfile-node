@@ -30,3 +30,5 @@ RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
 RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
 
 RUN useradd -o -u 1000 jenkins
+
+ENTRYPOINT ["launch.py"]

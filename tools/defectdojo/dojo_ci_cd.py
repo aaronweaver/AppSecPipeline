@@ -10,6 +10,7 @@ import os, sys
 import argparse
 import time
 import junit_xml_output
+import shutil
 
 DEBUG = True
 
@@ -83,16 +84,39 @@ def process_findings(dd, engagement_id, dir, build=None):
     for root, dirs, files in os.walk(dir):
         for name in files:
             file = os.path.join(os.getcwd(),root, name)
-            #Test for file extension
-            if file.lower().endswith(('.json', '.csv','.txt','.js', '.xml')):
-                test_id = processFiles(dd, engagement_id, file)
+            if "processed" not in str(file) and "error" not in str(file):
+                #Test for file extension
+                if file.lower().endswith(('.json', '.csv','.txt','.js', '.xml')):
+                    test_id = processFiles(dd, engagement_id, file)
 
-                if test_id is not None:
-                    if str(test_id).isdigit():
-                        test_ids.append(str(test_id))
-            else:
-                print "Skipped file, extension not supported: " + file + "\n"
+                    if test_id is not None:
+                        if str(test_id).isdigit():
+                            test_ids.append(str(test_id))
+                else:
+                    print "Skipped file, extension not supported: " + file + "\n"
     return ','.join(test_ids)
+
+def moveFile(file, success):
+    path = os.path.dirname(file)
+    name = os.path.basename(file)
+    dest = None
+
+    #folder for processed files
+    processFolder = os.path.join(path,"processed")
+    if not os.path.exists(processFolder):
+        os.mkdir(processFolder)
+
+    #folder for error file
+    errorFolder = os.path.join(path,"error")
+    if not os.path.exists(processFolder):
+        os.mkdir(errorFolder)
+
+    if success == True:
+        dest = os.path.join(path,processFolder,name)
+    else:
+        dest = os.path.join(path,errorFolder,name)
+
+    shutil.move(file, dest)
 
 def processFiles(dd, engagement_id, file, scanner=None, build=None):
     upload_scan = None
@@ -113,8 +137,10 @@ def processFiles(dd, engagement_id, file, scanner=None, build=None):
         test_id = dd.upload_scan(engagement_id, scanner, file, "true", dojoDate, build)
         if test_id.success == False:
             print "An error occured while uploading the scan: " + test_id.message
+            moveFile(file, False)
         else:
             print "Succesful upload, TestID: " + str(test_id) + "\n"
+            moveFile(file, True)
     else:
         if tool == "burp":
             scannerName = "Burp Scan"
@@ -158,8 +184,10 @@ def processFiles(dd, engagement_id, file, scanner=None, build=None):
             test_id = dd.upload_scan(engagement_id, scannerName, file, "true", dojoDate, build)
             if test_id.success == False:
                 print "An error occured while uploading the scan: " + test_id.message
+                moveFile(file, False)
             else:
                 print "Succesful upload, TestID: " + str(test_id)
+                moveFile(file, True)
 
     return test_id
 

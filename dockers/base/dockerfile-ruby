@@ -27,4 +27,13 @@ RUN useradd -o -u 1000 jenkins
 
 ENV BRAKEMAN_VERSION=4.0
 
+#WPScan install
+RUN cd /tmp && git clone https://github.com/wpscanteam/wpscan-v3
+RUN cd /tmp/wpscan-v3 && bundle install && rake install && cd ../
+
+#Update WPScanner DB
+RUN wpscan --update
+
 RUN gem install brakeman --version ${BRAKEMAN_VERSION} --no-format-exec
+
+ENTRYPOINT ["launch.py"]

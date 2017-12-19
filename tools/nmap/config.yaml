@@ -42,7 +42,7 @@ nmap:
     quick_light: "-sV -T4 -O -F –version-light $TARGET"
     #determine hosts and routers in a network scan. It will traceroute and ping all hosts defined in the target.
     traceroute: "-sn –traceroute $TARGET"
-    #Intense scan plus UDP, highly intrusive
+    #Intense scan plus UDP, highly intrusive and very slow
     comprehensive: "-sS -sU -T4 -A -v -PE -PP -PS80,443 -PA3389 -PU40125 -PY -g 53 -script \"default or (discovery and safe)\" $TARGET"
     #SYN scan
     syn: "–sS $TARGET"

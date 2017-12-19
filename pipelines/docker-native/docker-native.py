@@ -8,6 +8,8 @@ from cStringIO import StringIO
 import io
 import time
 import shutil
+import json
+import requests
 
 baseLocation = "../../controller"
 langFile = None
@@ -15,13 +17,16 @@ color = 0
 tcolors = ('\033[90m', '\033[93m', '\033[94m', '\033[95m', '\033[96m', '\033[33m', '\033[34m', '\033[35m', '\033[36m')
 ENDC = '\033[0m'
 
-def substituteArgs(args, command):
+def substituteArgs(args, command, find=None):
 
     toolArguments = ""
 
     for arg in args:
         if "=" in arg:
             env = arg.split("=", 1)
+            if env[0] == find:
+                toolArguments = env[1]
+
             if env[0] in command:
                 toolArguments = "%s %s " % (arg, toolArguments)
     return toolArguments
@@ -45,7 +50,7 @@ def getYamlConfig(yamlFile):
     return yamlConfig
 
 def getCommand(toolName, profile, commands):
-    command = "launch.py -t %s -p %s %s" % (toolName, profile, commands)
+    command = "-t %s -p %s %s" % (toolName, profile, commands)
 
     return command
 
@@ -78,20 +83,31 @@ def launchContainer(client, docker, tool, command, pipelineLaunchUID, tty=False,
     global color
     #Shared volume for reporting
     volumeToUse = getVolumeName(pipelineLaunchUID)
+
     if volumePath is not None:
         volumeToUse = volumePath
         #Ensure volumePath exists locally
         if os.path.exists(volumePath) == False:
             print "Source Volume Path does not exist: %s, exiting." % volumePath
             exit()
+        else:
+            volumeToUse = os.path.join(volumeToUse,pipelineLaunchUID)
+            if os.path.exists(volumeToUse) == False:
+                os.mkdir(volumeToUse)
 
     appsecpipelineVolume = {volumeToUse: {'bind': '/var/appsecpipeline', 'mode': 'rw'}}
 
     #Container Launch
     containerName = getContainerName(pipelineLaunchUID, tool)
-    container = client.containers.run(docker, command, network='appsecpipeline_default', working_dir='/var/appsecpipeline', name=containerName, labels=["appsecpipeline",pipelineLaunchUID], detach=True, volumes=appsecpipelineVolume, tty=tty)
 
-    print "\033[95mLaunching Image: %s %s\nContainer Name: %s with a Container ID of %s" % (docker, ENDC, containerName, container.id)
+    print "Launch Command: %s" % command
+
+    container = client.containers.run(docker, command, network='appsecpipeline_default',
+    working_dir='/var/appsecpipeline', name=containerName, labels=["appsecpipeline",pipelineLaunchUID],
+    detach=True, volumes=appsecpipelineVolume, tty=tty, user=1000)
+
+    print "\033[95mContainer Info: %s %s\nContainer Name: %s with a Container ID of %s" % (docker, ENDC, containerName, container.id)
+
     #if tty don't wait for logs as it will "hang"
     if tty == False:
         for line in container.logs(stream=True):
@@ -105,6 +121,7 @@ def launchContainer(client, docker, tool, command, pipelineLaunchUID, tty=False,
 def createVolume(pipelineLaunchUID):
     volumeName = getVolumeName(pipelineLaunchUID)
     volume = client.volumes.create(name=volumeName, driver='local',
+        driver_opts={'type': 'tmpfs', 'device': 'tmpfs', 'o':'uid=1000'},
         labels={"appsecpipeline": pipelineLaunchUID})
 
     return volume
@@ -178,6 +195,20 @@ def checkNetwork():
 def createNetwork(networkName):
     client.networks.create(networkName, driver="bridge")
 
+def slackAlert(**kwargs):
+    slack_web_hook = os.environ["SLACK_WEB_HOOK"]
+
+    payload_json = json.dumps(kwargs)
+    webhook_url = "https://hooks.slack.com/services/%s" % slack_web_hook
+
+    response = requests.post(
+        webhook_url, data=payload_json,
+        headers={'Content-Type': 'application/json'}
+    )
+
+def chatAlert(text):
+    slackAlert(text=text, channel="#security-appsec", username="AppSecPipeline", icon_emoji=":secret:")
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
     #Command line options
@@ -216,10 +247,14 @@ if __name__ == '__main__':
         #Stop the setup container
         lowLevelclient.stop(container=getContainerName(pipelineLaunchUID, "setup"))
 
+    slackTxt = "Security Pipeline Scan for: " + substituteArgs(remaining_argv, "", "URL")
+    chatAlert("*Starting:* " + slackTxt)
+
     if profile in masterYaml["profiles"]:
         for tool in masterYaml["profiles"][profile]:
             toolName = tool['tool']
             toolProfile = tool['profile']
+            chatAlert(">>>*Task:* " + toolName + ": " + slackTxt)
 
             print "***** Tool Details *****"
             toolDetails = toolYaml[toolName]
@@ -230,7 +265,7 @@ if __name__ == '__main__':
             volume = createVolume(pipelineLaunchUID)
             launcherControl(client, toolDetails["docker"], toolName, dockerCommand, pipelineLaunchUID, toolDetails, volumePath=volumeMount)
 
-        if cleanUp:
+        if cleanUp == True:
             #Clean up time
             if sourceContainer:
                 print "Pausing for containers to stop..."
@@ -255,5 +290,6 @@ if __name__ == '__main__':
             print "Shared Volume: " + volumeMount
         print "**********************************************\n\n"
         print "Complete!\n\n"
+        chatAlert("*Complete:* " + slackTxt)
     else:
         print "Profile not found."

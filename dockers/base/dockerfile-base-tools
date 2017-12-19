@@ -4,8 +4,7 @@ RUN apt-get install -y \
     nikto \
     cloc \
     unzip \
-    nmap \
-    wpscan
+    nmap
 
 #Python dependency installs
 RUN pip install -U bandit
@@ -30,3 +29,6 @@ RUN wget -qO- https://github.com/ssllabs/ssllabs-scan/releases/download/v${SSLLA
 
 #Jenkins user need write permissions on component cache
 RUN chown -R jenkins: /usr/share/arachni/system/
+USER jenkins
+
+ENTRYPOINT ["launch.py"]

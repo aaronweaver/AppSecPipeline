@@ -17,7 +17,7 @@ from datetime import datetime
 import base64
 
 baseLocation = "/usr/bin/appsecpipeline/"
-reportsDir = "reports/"
+reportsDir = "/var/appsecpipeline/reports/"
 
 #Allow for dynamic arguments to support a wide variety of tools
 #Format URL=Value, YAML Definition for substitution $URL
@@ -79,11 +79,13 @@ def checkFolderPath(toolName):
     if not os.path.exists(reportsDir):
         os.mkdir(reportsDir)
 
-    if not os.path.exists(reportsDir + folderName):
-        os.mkdir(reportsDir + folderName)
+    toolPath = os.path.join(reportsDir,folderName)
+    if not os.path.exists(toolPath):
+        os.mkdir(toolPath)
 
-    if not os.path.exists(reportsDir + folderName + "/junit"):
-        os.mkdir(reportsDir + folderName + "/junit")
+    junitPath = os.path.join(reportsDir,"junit")
+    if not os.path.exists(junitPath):
+        os.mkdir(junitPath)
 
 def getYamlConfig(toolName):
     #Expecting config file in tools/toolname/config.yaml
