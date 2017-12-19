@@ -10,18 +10,14 @@ env:
     - VERSION=1.${TRAVIS_BUILD_NUMBER}
 
 before_script:
+  - export REPO='appsecpipeline/base'
   - docker build -f dockers/base/dockerfile-base . -t appsecpipeline/base
+  - sh build/docker-hub.sh $TRAVIS_BRANCH $REPO $VERSION
+
+script:
+  - |
+    echo "Running test=$TEST"
 
 matrix:
   - docker build -f dockers/base/dockerfile-base-tools . -t appsecpipeline/base-tools
   - docker build -f dockers/base/dockerfile-sast . -t appsecpipeline/sast
-
-after_success:
-  #Push to docker repo
-  - docker tag $REPO $REPO:$TAG
-  - docker tag $REPO $REPO:travis-$TRAVIS_BUILD_NUMBER
-  - |
-    if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TEST" == "integration-test" ] && [ "$DOCKER_USER" != "" ] && [  "$DOCKER_PASS" != "" ]; then
-      docker login -u "$DOCKER_USER" -p "$DOCKER_PASS";
-      docker push $REPO ;
-    fi
