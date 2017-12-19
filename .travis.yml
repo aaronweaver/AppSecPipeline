@@ -14,7 +14,7 @@ before_script:
 
 matrix:
   - docker build -f dockers/base/dockerfile-base-tools . -t appsecpipeline/base-tools
-  - docker build --no-cache -f dockers/base/dockerfile-sast . -t appsecpipeline/sast
+  - docker build -f dockers/base/dockerfile-sast . -t appsecpipeline/sast
 
 after_success:
   #Push to docker repo
