@@ -13,7 +13,7 @@ else
 fi
 
 docker build -f dockers/$DOCKER_FILE . -t $REPO
-docker build -f dockers/base/dockerfile-base . -t $REPO
+
 docker tag $REPO $REPO:$TAG
 docker tag $REPO $REPO:$VERSION
 if [ "$TRAVIS_BRANCH" == "master" ] && [ "$DOCKER_USER" != "" ] && [  "$DOCKER_PASS" != "" ]; then
