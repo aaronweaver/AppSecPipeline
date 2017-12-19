@@ -6,11 +6,11 @@ services:
   - docker
 
 env:
-  - PIPELINE_BUILD=basetools
-  - PIPELINE_BUILD=sast
-  
   global:
     - VERSION=1.${TRAVIS_BUILD_NUMBER}
+  matrix:
+    - PIPELINE_BUILD=basetools
+    - PIPELINE_BUILD=sast
 
 before_script:
   - export REPO='appsecpipeline/base'
