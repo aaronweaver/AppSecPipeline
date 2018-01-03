@@ -11,6 +11,7 @@ import argparse
 import time
 import junit_xml_output
 import shutil
+import yaml
 
 DEBUG = True
 
@@ -64,7 +65,7 @@ def return_engagement(dd, product_id, user, build_id=None):
 
     print "Engagement ID created: " + str(engagement_id)
 
-    return engagement_id
+    return str(engagement_id)
 
 def process_findings(dd, engagement_id, dir, build=None):
     test_ids = []
@@ -316,7 +317,7 @@ class Main:
         build_id = args["build_id"]
         proxy = args["proxy"]
 
-        if dir is not None or file is not None:
+        if dir is not None:
             if ":" not in api_key:
                 print "API Key not in the correct format, must be: <user>:<guid>"
                 quit()
@@ -324,21 +325,19 @@ class Main:
             user = apiParsed[0]
             api_key = apiParsed[1]
             dd = dojo_connection(host, api_key, user, proxy)
-            if engagement_id is None:
-                engagement_id = return_engagement(dd, product_id, user, build_id=build_id)
-            test_ids = None
-            if file is not None:
-                if scanner is not None:
-                    test_ids = processFiles(dd, engagement_id, file, scanner=scanner)
-                else:
-                    print "Scanner type must be specified for a file import. --scanner"
-            else:
-                test_ids = process_findings(dd, engagement_id, dir, build_id)
+            engagement_id = return_engagement(dd, product_id, user, build_id=build_id)
+
+            data = dict(
+                DOJO_ENGAGEMENT_ID = engagement_id
+            )
+
+            yamlLoc = os.path.join(os.path.join(dir,"prepenv"),"appruntime.yaml")
+            with open(yamlLoc, 'w') as outfile:
+                yaml.dump(data, outfile, default_flow_style=False)
 
             #Close the engagement
             if closeEngagement == True:
                 dd.close_engagement(engagement_id)
 
-            summary(dd, engagement_id, test_ids, max_critical, max_high, max_medium)
         else:
             print "No file or directory to scan specified."

@@ -24,6 +24,6 @@ bandit:
     - "python"
   profiles:
     #Runs the full bandit scan
-    all: "$LOC/*.py"
+    all: "-r $LOC"
     #Only the issues that are the highest severity and the highest confidence
-    tuned: "-lll -iii -r $LOC/*.py"
+    tuned: "-lll -iii -r $LOC"

@@ -4,7 +4,7 @@ A curated list of tools that are packaged in the AppSecPipeline docker images.
 
 ### Config YAML
 
-Tool are launched via a YAML file in the tool folder name. For example arachni conists of: tools/arachni/config.yaml
+Tool are launched via a YAML file in the tool folder name. For example arachni consists of: tools/arachni/config.yaml
 
 **Yaml Tool Specification:**
 
@@ -257,3 +257,9 @@ yacc                       (y)
 YAML                       (yaml, yml)
 zsh                        (zsh)
 </pre>
+
+Running a tool using the launch script:
+
+```
+docker run --rm -ti -v /your/path/AppSecPipelineReports:/var/appsecpipeline/reports/ appsecpipeline/base /usr/bin/appsecpipeline/tools/launch.py --tool nmap -p regular TARGET=localhost api_key=$DOJO_API_KEY host=$DOJO_HOST product=$DOJO_PRODUCT_ID
+```

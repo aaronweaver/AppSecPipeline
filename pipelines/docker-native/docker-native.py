@@ -10,6 +10,7 @@ import time
 import shutil
 import json
 import requests
+import sys
 
 baseLocation = "../../controller"
 langFile = None
@@ -49,11 +50,6 @@ def getYamlConfig(yamlFile):
 
     return yamlConfig
 
-def getCommand(toolName, profile, commands):
-    command = "-t %s -p %s %s" % (toolName, profile, commands)
-
-    return command
-
 def launcherControl(client, docker, tool, command, pipelineLaunchUID, toolProfile, volumePath=None):
     runContainer = False
     #Check tool profile (dynamic/static/code-analyzer)
@@ -68,13 +64,13 @@ def launcherControl(client, docker, tool, command, pipelineLaunchUID, toolProfil
             runContainer = False
     elif toolType == "code-analyzer":
         runContainer = True
-    elif toolType == "collector":
+    else:
         runContainer = True
 
     if runContainer:
         launchContainer(client, docker, tool, command, pipelineLaunchUID, volumePath=volumePath)
     else:
-        print "Skipped Tool: %s" % (tool)
+        print "Skipped  %s" % (tool)
 
     if toolType == "code-analyzer":
         checkLanguages(getContainerName(pipelineLaunchUID, tool))
@@ -103,9 +99,10 @@ def launchContainer(client, docker, tool, command, pipelineLaunchUID, tty=False,
     print "Launch Command: %s" % command
 
     container = client.containers.run(docker, command, network='appsecpipeline_default',
-    working_dir='/var/appsecpipeline', name=containerName, labels=["appsecpipeline",pipelineLaunchUID],
+    name=containerName, labels=["appsecpipeline",pipelineLaunchUID],
     detach=True, volumes=appsecpipelineVolume, tty=tty, user=1000)
-
+    #working_dir='/var/appsecpipeline',
+    
     print "\033[95mContainer Info: %s %s\nContainer Name: %s with a Container ID of %s" % (docker, ENDC, containerName, container.id)
 
     #if tty don't wait for logs as it will "hang"
@@ -209,6 +206,45 @@ def slackAlert(**kwargs):
 def chatAlert(text):
     slackAlert(text=text, channel="#security-appsec", username="AppSecPipeline", icon_emoji=":secret:")
 
+def getCommand(toolName, profile, commands, runeveryTool, runeveryProfile):
+    command = "-t %s -p %s %s" % (toolName, profile, commands)
+
+    if runeveryTool is not None:
+        command += " --runevery %s --runevery-profile %s" % (runeveryTool, runeveryProfile)
+    return command
+
+def toolLaunch(toolName, toolProfile, runeveryTool, runeveryProfile):
+    chatAlert(">>>*Executing:* " + toolName + ": " + slackTxt)
+
+    print "***** Tool Details *****"
+    toolDetails = toolYaml[toolName]
+    command = "%s %s" % (toolDetails["profiles"][toolProfile], toolDetails["commands"]["exec"])
+    toolArgs = substituteArgs(remaining_argv, command)
+
+    if runeveryTool is not None:
+        print "***** runevery Tool Details *****"
+        toolruneveryDetails = toolYaml[runeveryTool]
+        command = "%s %s" % (toolruneveryDetails["profiles"][runeveryProfile], toolruneveryDetails["commands"]["exec"])
+        toolArgs += substituteArgs(remaining_argv, command)
+
+    dockerCommand = getCommand(toolName, toolProfile, toolArgs, runeveryTool, runeveryProfile)
+
+    volume = createVolume(pipelineLaunchUID)
+    launcherControl(client, toolDetails["docker"], toolName, dockerCommand, pipelineLaunchUID, toolDetails, volumePath=volumeMount)
+    return volume
+
+def pipelineTools(pipelineTools):
+    chatAlert("*Tools that will be run:* ")
+    appSecPipeline = ""
+    toolName = None
+    for tool in pipelineTools:
+        toolName = tool['tool']
+        appSecPipeline += toolName + ", "
+
+    chatAlert(">>>*AppSecPipeline:* " + appSecPipeline[:-2])
+
+    return toolName
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
     #Command line options
@@ -250,20 +286,36 @@ if __name__ == '__main__':
     slackTxt = "Security Pipeline Scan for: " + substituteArgs(remaining_argv, "", "URL")
     chatAlert("*Starting:* " + slackTxt)
 
+    runeveryTool = None
+    runeveryProfile = None
+    finalTool = None
+    finalProfile = None
+
     if profile in masterYaml["profiles"]:
-        for tool in masterYaml["profiles"][profile]:
+        if "startup" in masterYaml["profiles"][profile]:
+            startupTool = masterYaml["profiles"][profile]["startup"]["tool"]
+            startupProfile = masterYaml["profiles"][profile]["startup"]["profile"]
+            volume = toolLaunch(startupTool, startupProfile, None, None)
+
+        if "runevery" in masterYaml["profiles"][profile]:
+            runeveryTool = masterYaml["profiles"][profile]["runevery"]["tool"]
+            runeveryProfile = masterYaml["profiles"][profile]["runevery"]["profile"]
+
+        if "final" in masterYaml["profiles"][profile]:
+            finalTool = masterYaml["profiles"][profile]["final"]["tool"]
+            finalProfile = masterYaml["profiles"][profile]["final"]["profile"]
+
+        finalPipelineTool = pipelineTools(masterYaml["profiles"][profile]["pipeline"])
+
+        for tool in masterYaml["profiles"][profile]["pipeline"]:
             toolName = tool['tool']
             toolProfile = tool['profile']
-            chatAlert(">>>*Task:* " + toolName + ": " + slackTxt)
 
-            print "***** Tool Details *****"
-            toolDetails = toolYaml[toolName]
-            command = "%s %s" % (toolDetails["profiles"][toolProfile], toolDetails["commands"]["exec"])
-            toolArgs = substituteArgs(remaining_argv, command)
-            dockerCommand = getCommand(toolName, toolProfile, toolArgs)
+            volume = toolLaunch(toolName, toolProfile, runeveryTool, runeveryProfile)
 
-            volume = createVolume(pipelineLaunchUID)
-            launcherControl(client, toolDetails["docker"], toolName, dockerCommand, pipelineLaunchUID, toolDetails, volumePath=volumeMount)
+            #Final command on pipeline
+            if toolName == finalPipelineTool and finalTool is not None:
+                volume = toolLaunch(finalTool, finalProfile, None, None)
 
         if cleanUp == True:
             #Clean up time

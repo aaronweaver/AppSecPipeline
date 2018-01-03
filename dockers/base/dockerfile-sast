@@ -48,3 +48,5 @@ RUN chmod -R u=rwx /usr/bin/dependency-check/data
 USER jenkins
 
 ENTRYPOINT ["launch.py"]
+
+HEALTHCHECK --interval=1m --retries=2 --timeout=5s CMD python /usr/bin/appsecpipeline/tools/health.py

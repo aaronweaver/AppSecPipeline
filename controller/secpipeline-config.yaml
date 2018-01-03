@@ -175,10 +175,12 @@ defectdojo:
    - "DOJO_PRODUCT_ID"
    - "DOJO_PROXY"
    - "BUILD_ID"
+   - "DOJO_ENGAGEMENT_ID"
+   - "DOJO_DIR"
   commands:
     parameters: "dir : Directory of security tool output."
     pre:
-    exec: "python /usr/bin/appsecpipeline/tools/defectdojo/dojo_ci_cd.py"
+    exec: "python /usr/bin/appsecpipeline/tools/defectdojo/dojo_ci_cd.py --dir=$DOJO_DIR --api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID"
     shell: False
     post:
     report:
@@ -186,8 +188,10 @@ defectdojo:
     post:
     junit:
   profiles:
-    all: "--api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID --build_id=$BUILD_ID"
-    all_proxy: "--proxy=$DOJO_PROXY --api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID --build_id=$BUILD_ID"
+    all: "--build_id=$BUILD_ID"
+    close_engagement: "--engagement=$DOJO_ENGAGEMENT_ID --closeengagement"
+    engagement: "--engagement=$DOJO_ENGAGEMENT_ID"
+    all_proxy: "--proxy=$DOJO_PROXY --build_id=$BUILD_ID"
 dependency-check:
   version: AppSecPipeline 0.5.0
   name: "dependency-check"
@@ -220,6 +224,31 @@ dependency-check:
   profiles:
     #Runs the full dependency scan, only updates every week
     all: "--project $PROJECT --scan $LOC --cveValidForHours 168"
+git:
+  version: AppSecPipeline 0.5.0
+  name: git
+  tags:
+    - "Utility"
+  type: "utility"
+  description: "Git is a free and open source distributed version control system designed to handle everything from small to very large projects with speed and efficiency."
+  docker: "appsecpipeline/base"
+  url: https://git-scm.com/
+  documentation: https://git-scm.com/docs/git
+  parameters:
+   - "GIT_URL"
+   - "GIT_DEST"
+  commands:
+    parameters: "dir : Directory of security tool output."
+    pre:
+    exec: "git"
+    shell: True
+    post:
+    report:
+    reportname:
+    post:
+    junit:
+  profiles:
+    clone: "clone $GIT_URL $GIT_DEST"
 nikto:
   version: AppSecPipeline 0.5.0
   tags:
@@ -311,6 +340,39 @@ nmap:
     windows: "–sW $TARGET"
     #Stealth scan
     stealth: "-sS -p- -T2 $TARGET"
+prepenv:
+  version: AppSecPipeline 0.5.0
+  name: prepenv
+  tags:
+    - "Utility"
+  type: "utility"
+  description: "AppSecPipeline Utility"
+  docker: "appsecpipeline/base"
+  url: https://github.com/OWASP/django-DefectDojo
+  documentation: http://defectdojo.readthedocs.io/en/latest/
+  parameters:
+   - "DOJO_API_KEY"
+   - "DOJO_HOST"
+   - "DOJO_PRODUCT_ID"
+   - "DOJO_PROXY"
+   - "BUILD_ID"
+   - "DOJO_ENGAGEMENT_ID"
+   - "DOJO_DIR"
+  commands:
+    parameters: "dir : Directory of security tool output."
+    pre:
+    exec: "python /usr/bin/appsecpipeline/tools/prepenv/prep_run.py --dir=$DOJO_DIR --api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID"
+    shell: False
+    post:
+    report:
+    reportname:
+    post:
+    junit:
+  profiles:
+    all: "--build_id=$BUILD_ID"
+    close_engagement: "--engagement=$DOJO_ENGAGEMENT_ID --closeengagement"
+    engagement: "--engagement=$DOJO_ENGAGEMENT_ID"
+    all_proxy: "--proxy=$DOJO_PROXY --build_id=$BUILD_ID"
 retirejs:
   version: AppSecPipeline 0.5.0
   name: retirejs

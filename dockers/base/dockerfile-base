@@ -12,7 +12,8 @@ RUN apt-get update \
     python2.7 \
     python2.7-dev \
     csvtool \
-    openjdk-9-jre-headless
+    openjdk-9-jre-headless \
+    nmap
 
 #Python dependency installs
 RUN pip install -U pyyaml
@@ -27,4 +28,11 @@ COPY tools /usr/bin/appsecpipeline/tools
 RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
 RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
 
-RUN useradd -o -u 1000 jenkins
+RUN useradd -m jenkins -u 1000
+
+RUN mkdir /home/jenkins/.ssh/
+RUN chmod 700 /home/jenkins/.ssh/
+
+ENTRYPOINT ["launch.py"]
+
+HEALTHCHECK --interval=1m --retries=2 --timeout=5s CMD python /usr/bin/appsecpipeline/tools/health.py

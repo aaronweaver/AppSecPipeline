@@ -34,3 +34,5 @@ RUN groupmod -g 1000 zap
 USER zap
 
 ENTRYPOINT ["launch.py"]
+
+HEALTHCHECK --interval=1m --retries=2 --timeout=5s CMD python /usr/bin/appsecpipeline/tools/health.py

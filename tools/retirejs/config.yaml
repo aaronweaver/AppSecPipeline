@@ -23,5 +23,5 @@ retirejs:
     - "javascript"
     - "nodejs"
   profiles:
-    #Runs the full depedency scan
+    #Runs the full dependency scan
     all: "--path $LOC"

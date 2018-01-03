@@ -1,0 +1,33 @@
+prepenv:
+  version: AppSecPipeline 0.5.0
+  name: prepenv
+  tags:
+    - "Utility"
+  type: "utility"
+  description: "AppSecPipeline Utility"
+  docker: "appsecpipeline/base"
+  url: https://github.com/OWASP/django-DefectDojo
+  documentation: http://defectdojo.readthedocs.io/en/latest/
+  parameters:
+   - "DOJO_API_KEY"
+   - "DOJO_HOST"
+   - "DOJO_PRODUCT_ID"
+   - "DOJO_PROXY"
+   - "BUILD_ID"
+   - "DOJO_ENGAGEMENT_ID"
+   - "DOJO_DIR"
+  commands:
+    parameters: "dir : Directory of security tool output."
+    pre:
+    exec: "python /usr/bin/appsecpipeline/tools/prepenv/prep_run.py --dir=$DOJO_DIR --api_key=$DOJO_API_KEY --host=$DOJO_HOST --product=$DOJO_PRODUCT_ID"
+    shell: False
+    post:
+    report:
+    reportname:
+    post:
+    junit:
+  profiles:
+    all: "--build_id=$BUILD_ID"
+    close_engagement: "--engagement=$DOJO_ENGAGEMENT_ID --closeengagement"
+    engagement: "--engagement=$DOJO_ENGAGEMENT_ID"
+    all_proxy: "--proxy=$DOJO_PROXY --build_id=$BUILD_ID"

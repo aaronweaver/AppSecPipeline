@@ -21,9 +21,39 @@ reportsDir = "/var/appsecpipeline/reports/"
 
 #Allow for dynamic arguments to support a wide variety of tools
 #Format URL=Value, YAML Definition for substitution $URL
+"""
 def substituteArgs(args, command):
     for arg in args:
         #print arg
+        env = arg.split("=", 1) #Only split on the first '='
+        if len(env) > 1:
+            name = env[0]
+            value = env[1]
+            #Replace values if those values exist in the command
+
+            print "name"
+            print name.lower()
+            print "value"
+            print value
+            print "Command"
+            print command.lower()
+
+            if name.lower() in command.lower():
+                if name.startswith('--'):
+                    name = name.replace("--","", 1)
+
+                if name.startswith('-'):
+                    name = name.replace("-","", 1)
+
+                command = command.replace("$" + name, value)
+                #print "Command replaced: " + command
+    return command
+"""
+
+def substituteArgs(args, command):
+    for arg in args:
+        print "Arguments: "
+        print arg
         env = arg.split("=", 1) #Only split on the first '='
         if len(env) > 1:
             name = env[0]
@@ -46,6 +76,31 @@ def substituteArgs(args, command):
 
                 command = command.replace("$" + name, value)
                 #print "Command replaced: " + command
+
+            #Check if any command haven't been replaced and see if it's the app runtime config
+            if "$" in command:
+                try:
+                    yamlLoc = os.path.join(os.path.join(reportsDir,"prepenv"),"appruntime.yaml")
+                    #print "YAML file: " + yamlLoc
+                    #print os.listdir(os.path.join(reportsDir,"prepenv"))
+
+                    with open(yamlLoc, 'r') as stream:
+                        try:
+                            launchCmd = None
+                            report = None
+                            fullReportName = None
+                            profile_found = False
+
+                            #Tool configuration
+                            config = yaml.safe_load(stream)
+
+                            for item in config:
+                                if item.lower() in command.lower():
+                                    command = command.replace("$" + item, config[item])
+                        except yaml.YAMLError as exc:
+                            print(exc)
+                except Exception as e:
+                    print "YAML prep file not found, skipping. Detail: " + str(e)
     return command
 
 def slugify(s):
@@ -59,8 +114,7 @@ def slugify(s):
 
 def reportName(toolName, reportString):
     filename = None
-    basePath = os.path.join(os.getcwd(),reportsDir,toolName)
-    #basePath = os.path.join(reportsDir,toolName)
+    basePath = os.path.join(reportsDir,toolName)
 
     if "{timestamp}" in reportString:
         #Add the folder path and datetimestamps
@@ -96,63 +150,25 @@ def getYamlConfig(toolName):
 
     return yamlLoc
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(add_help=False)
-    #Command line options
-    parser.add_argument("-t", "--tool", help="Tool to Run", required=True)
-    parser.add_argument("-s", "--scan_type", help="Scan Type (dynamic, static)", default=None)
-    parser.add_argument("-p", "--profile", help="Profile to Execute", default=None)
-    parser.add_argument("-c", "--credential", help="Scan with login credentials. Specify credentialed profile.", default=None)
-    parser.add_argument("-m", "--test", help="Run the command in test mode only, non-execution.", default=False)
-
-    args, remaining_argv = parser.parse_known_args()
-
-    yamlConfig = getYamlConfig(args.tool)
+def executeTool(tool, profile_run, credentialedScan, test_mode):
+    yamlConfig = getYamlConfig(tool)
 
     with open(yamlConfig, 'r') as stream:
         try:
-            config = yaml.safe_load(stream)
             launchCmd = None
             report = None
-            scan_type = None
-            profile_run = None
-            profile_found = False
-            test_mode = False
             fullReportName = None
-            credentialedScan = None
+            profile_found = False
 
-            if args.scan_type:
-                scan_type = args.scan_type
+            #Tool configuration
+            config = yaml.safe_load(stream)
 
-            if args.profile:
-                profile_run = args.profile
+             #Set the object to the tool yaml section
+            tool = config[tool]
 
-            if args.credential:
-                credentialedScan = args.credential
-
-            if args.test:
-                test_mode = args.test
-
-            #Set the object to the tool yaml section
-            tool = config[args.tool]
             #Tooling commands
             commands = tool["commands"]
 
-            #if tool["type"] == scan_type:
-                #Check to see if a profile exists
-            """
-            for profile in tool["profiles"]:
-                if profile_run in profile:
-                    launchCmd = profile[profile_run]
-                    profile_found = True
-                #Profile not found check the attack_type
-                if "attack_types" in profile and launchCmd is None:
-                    for attack_type in profile["attack_types"]:
-                        if attack_type == profile_run:
-                            if isinstance(profile["attack_types"][profile_run], basestring):
-                                launchCmd = profile["attack_types"][profile_run]
-                                profile_found = True
-            """
             if profile_run in tool["profiles"]:
                 launchCmd = tool["profiles"][profile_run]
                 profile_found = True
@@ -166,6 +182,9 @@ if __name__ == '__main__':
                 #Only launch command if a launch command is specified
                 #Pre and post require a launch command
                 if launchCmd:
+                    #Create a directory to store the reports
+                    checkFolderPath(tool["name"])
+                    print "created folder"
                     #Execute a pre-commmand, such as a setup or updated requirement
                     if commands["pre"] is not None:
                         if not test_mode:
@@ -175,8 +194,6 @@ if __name__ == '__main__':
                             print "*****************************"
                             call(shlex.split(preCommands))
 
-                    #Create a directory to store the reports
-                    checkFolderPath(tool["name"])
                     launchCmd = commands["exec"] + " " + launchCmd
 
                     #Check for credentialed scan
@@ -199,9 +216,10 @@ if __name__ == '__main__':
                     #Check for any commands that have not been substituted and warn
                     if "$" in launchCmd:
                         print "*****************************"
-                        print "Warning: Some commands haven't been substituted. Please review:"
+                        print "Warning: Some commands haven't been substituted. Exiting."
                         print launchCmd
                         print "*****************************"
+                        sys.exit(1)
 
                     if not test_mode:
                         if "shell" in commands:
@@ -237,8 +255,47 @@ if __name__ == '__main__':
                                     call(shlex.split(junitCmd))
             else:
                 print "Profile or command to run not found in Yaml configuration file."
-        #else:
-        #    print "No profile or scan type found."
-
         except yaml.YAMLError as exc:
             print(exc)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(add_help=False)
+    #Command line options
+    parser.add_argument("-t", "--tool", help="Tool to Run", required=True)
+    parser.add_argument("-p", "--profile", help="Profile to Execute", default=None)
+    parser.add_argument("-c", "--credential", help="Scan with login credentials. Specify credentialed profile.", default=None)
+    parser.add_argument("-m", "--test", help="Run the command in test mode only, non-execution.", default=False)
+    parser.add_argument("-f", "--runevery", help="Runs a runevery tool after each step, for example DefectDojo.", default=False)
+    parser.add_argument("-fp", "--runevery-profile", help="runevery tool profile.", default=False)
+
+    args, remaining_argv = parser.parse_known_args()
+
+    profile_run = None
+    profile_found = False
+    test_mode = False
+    credentialedScan = None
+    runeveryTool = None
+    runeveryProfile = None
+
+    if args.runevery:
+        runeveryTool = args.runevery
+
+    if args.runevery_profile:
+        runeveryProfile = args.runevery_profile
+
+    if args.profile:
+        profile_run = args.profile
+
+    if args.credential:
+        credentialedScan = args.credential
+
+    if args.test:
+        test_mode = args.test
+
+    if args.tool:
+        tool = args.tool
+
+    executeTool(tool, profile_run, credentialedScan, test_mode)
+
+    if runeveryTool is not None:
+        executeTool(runeveryTool, runeveryProfile, False, test_mode)

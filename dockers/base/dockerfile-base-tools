@@ -59,3 +59,5 @@ RUN chown -R jenkins: /usr/share/arachni/system/
 USER jenkins
 
 ENTRYPOINT ["launch.py"]
+
+HEALTHCHECK --interval=1m --retries=2 --timeout=5s CMD python /usr/bin/appsecpipeline/tools/health.py

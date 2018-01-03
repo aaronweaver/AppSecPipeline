@@ -37,3 +37,5 @@ RUN wpscan --update
 RUN gem install brakeman --version ${BRAKEMAN_VERSION} --no-format-exec
 
 ENTRYPOINT ["launch.py"]
+
+HEALTHCHECK --interval=1m --retries=2 --timeout=5s CMD python /usr/bin/appsecpipeline/tools/health.py
