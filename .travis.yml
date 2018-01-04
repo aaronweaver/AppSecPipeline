@@ -9,6 +9,9 @@ env:
   global:
     - VERSION=1.${TRAVIS_BUILD_NUMBER}
   matrix:
+    - PIPELINE_BUILD='base'
+      DOCKER_FILE='base/dockerfile-base'
+      REPO='appsecpipeline/base'
     - PIPELINE_BUILD='basetools'
       DOCKER_FILE='base/dockerfile-base-tools'
       REPO='appsecpipeline/base-tools'
