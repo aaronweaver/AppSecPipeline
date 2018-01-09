@@ -2,7 +2,6 @@ cloc:
   tags:
     - "Static Code Analyzer"
   type: "code-analyzer"
-  name: "cloc"
   icon-sm:
   icon-lg:
   description: "cloc counts blank lines, comment lines, and physical lines of source code in many programming languages."

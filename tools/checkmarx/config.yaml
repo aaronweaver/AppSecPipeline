@@ -1,14 +1,14 @@
-appspider:
+checkmarx:
   version: AppSecPipeline 0.5.0
   tags:
-    - "Dynamic Scanner"
-  type: "dynamic"
-  scan_type: "web"
+    - "Static Scanner"
+  type: "static"
+  name: "checkmarx"
   icon-sm:
   icon-lg:
-  description: "AppSpider automatically finds vulnerabilities across a wide range of applications from the relatively simple to the most complex—and it includes unique capabilities that enable teams to automate more of the security testing program across the entire software development lifecycle, from creation through production."
-  url: https://www.rapid7.com/products/appspider/
-  documentation: https://appspider.help.rapid7.com/docs/
+  description: "Checkmarx is a source code analysis product that allows organization to scan uncompiled code and identify vulnerabilities."
+  url: https://www.checkmarx.com/technology/static-code-analysis-sca/
+  documentation: https://checkmarx.atlassian.net/wiki/spaces/KC/overview
   docker: appsecpipeline/base
   parameters:
    - "URL"
@@ -26,6 +26,24 @@ appspider:
     reportname: "VulnerabilitiesSummary.xml"
     post:
     junit:
+  languages:
+    - "ruby"
+    - "java"
+    - "c#.net"
+    - "php"
+    - "python"
+    - "groovy"
+    - "android"
+    - "ios"
+    - "html5"
+    - "c++"
+    - "vb.net"
+    - "vb"
+    - "pl/sql"
+    - "perl"
+    - "apex"
+    - "scala"
+    - "swift"
   profiles:
     all: "--run-scan-poll $run-scan-poll"
     active: "--checks=active/*"

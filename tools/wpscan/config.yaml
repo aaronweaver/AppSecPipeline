@@ -4,7 +4,6 @@ wpscan:
     - "Dyanmic Scanner"
   type: "dynamic"
   scan_type: "web"
-  name: "wpscan"
   icon-sm:
   icon-lg:
   description: "WPScan is a black box WordPress vulnerability scanner."

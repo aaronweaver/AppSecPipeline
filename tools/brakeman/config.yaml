@@ -1,6 +1,5 @@
 brakeman:
   version: AppSecPipeline 0.5.0
-  name: "brakeman"
   tags:
     - "Static Code Analyzer"
   type: "static"

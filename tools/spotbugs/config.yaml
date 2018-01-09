@@ -1,6 +1,5 @@
 spotbugs:
   version: AppSecPipeline 0.5.0
-  name: spotbugs
   tags:
     - "Static Code Analyzer"
   type: "static"
@@ -9,7 +8,7 @@ spotbugs:
   url: https://spotbugs.github.io/
   documentation: http://spotbugs-in-kengo-toda.readthedocs.io/en/latest/index.html
   parameters:
-   - "COMPILE_LOC"
+   - "LOC"
   commands:
     parameters: "COMPILE_LOC : Location of jar file. LOC=/temp/jar"
     pre:

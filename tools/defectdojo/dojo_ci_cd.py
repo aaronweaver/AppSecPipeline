@@ -229,9 +229,9 @@ def summary(dd, engagement_id, test_ids, max_critical=0, max_high=0, max_medium=
             if findings.count() > 0:
                 for finding in findings.data["objects"]:
                     test_cases.append(junit_xml_output.TestCase(finding["title"] + " Severity: " + finding["severity"], finding["description"],"failure"))
-                if not os.path.exists("reports"):
-                    os.mkdir("reports")
-                junit("DefectDojo", "reports/junit_dojo.xml")
+                #if not os.path.exists("reports"):
+                #    os.mkdir("reports")
+                #junit("DefectDojo", "reports/junit_dojo.xml")
 
             print"\n=============================================="
             print "Total Number of New Findings: " + str(findings.data["meta"]["total_count"])

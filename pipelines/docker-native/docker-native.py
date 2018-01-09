@@ -91,7 +91,7 @@ def launchContainer(client, docker, tool, command, pipelineLaunchUID, tty=False,
             if os.path.exists(volumeToUse) == False:
                 os.mkdir(volumeToUse)
 
-    appsecpipelineVolume = {volumeToUse: {'bind': '/var/appsecpipeline', 'mode': 'rw'}}
+    appsecpipelineVolume = {volumeToUse: {'bind': '/opt/appsecpipeline', 'mode': 'rw'}}
 
     #Container Launch
     containerName = getContainerName(pipelineLaunchUID, tool)
@@ -102,7 +102,7 @@ def launchContainer(client, docker, tool, command, pipelineLaunchUID, tty=False,
     name=containerName, labels=["appsecpipeline",pipelineLaunchUID],
     detach=True, volumes=appsecpipelineVolume, tty=tty, user=1000)
     #working_dir='/var/appsecpipeline',
-    
+
     print "\033[95mContainer Info: %s %s\nContainer Name: %s with a Container ID of %s" % (docker, ENDC, containerName, container.id)
 
     #if tty don't wait for logs as it will "hang"

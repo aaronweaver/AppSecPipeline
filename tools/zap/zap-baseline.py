@@ -202,11 +202,11 @@ def main(argv):
         sys.exit(3)
 
     if running_in_docker():
-        base_dir = '/var/appsecpipeline/reports/'
+        base_dir = '/opt/appsecpipeline/reports/'
         if config_file or generate or report_html or report_xml or report_json or progress_file or context_file:
             # Check directory has been mounted
             if not os.path.exists(base_dir):
-                logging.warning('A file based option has been specified but the directory \'/zap/wrk\' is not mounted ')
+                logging.warning('A file based option has been specified but the directory \'/opt/appsecpipeline/reports/\' is not mounted ')
                 usage()
                 sys.exit(3)
 

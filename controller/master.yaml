@@ -44,8 +44,8 @@ profiles:
       tool: defectdojo
       profile: close_engagement
     pipeline:
-      - tool: "git"
-        profile: "clone"
+      - tool: "zap"
+        profile: "quick"
       - tool: "nmap"
         profile: "quick"
       - tool: "ssllabs"

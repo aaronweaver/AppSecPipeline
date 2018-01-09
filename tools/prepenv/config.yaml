@@ -1,6 +1,5 @@
 prepenv:
   version: AppSecPipeline 0.5.0
-  name: prepenv
   tags:
     - "Utility"
   type: "utility"

@@ -4,7 +4,6 @@ nikto:
     - "Dyanmic Scanner"
   type: "dynamic"
   scan_type: "web"
-  name: "nikto"
   icon-sm:
   icon-lg:
   description: "Web server scanner which performs comprehensive tests against web servers for multiple items, including over 3500 potentially dangerous files/CGIs, versions on over 900 servers, and version specific problems on over 250 servers."

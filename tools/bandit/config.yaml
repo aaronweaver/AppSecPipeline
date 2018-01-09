@@ -15,7 +15,6 @@ bandit:
     pre:
     exec: "bandit"
     shell: True
-    post:
     report: "-f csv -o {reportname}"
     reportname: "{timestamp}.csv"
     post: "python /usr/bin/appsecpipeline/tools/bandit/parser.py -f {reportname}"

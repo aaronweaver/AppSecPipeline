@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 
 """Launch.py: Starts tooling based on the supplied yaml file in support of the AppSec Pipeline."""
 
@@ -17,43 +18,15 @@ from datetime import datetime
 import base64
 
 baseLocation = "/usr/bin/appsecpipeline/"
-reportsDir = "/var/appsecpipeline/reports/"
+baseData = "/opt/appsecpipeline/"
+reportsDir = os.path.join(baseData,"reports")
 
 #Allow for dynamic arguments to support a wide variety of tools
 #Format URL=Value, YAML Definition for substitution $URL
-"""
 def substituteArgs(args, command):
     for arg in args:
+        #print "Arguments: "
         #print arg
-        env = arg.split("=", 1) #Only split on the first '='
-        if len(env) > 1:
-            name = env[0]
-            value = env[1]
-            #Replace values if those values exist in the command
-
-            print "name"
-            print name.lower()
-            print "value"
-            print value
-            print "Command"
-            print command.lower()
-
-            if name.lower() in command.lower():
-                if name.startswith('--'):
-                    name = name.replace("--","", 1)
-
-                if name.startswith('-'):
-                    name = name.replace("-","", 1)
-
-                command = command.replace("$" + name, value)
-                #print "Command replaced: " + command
-    return command
-"""
-
-def substituteArgs(args, command):
-    for arg in args:
-        print "Arguments: "
-        print arg
         env = arg.split("=", 1) #Only split on the first '='
         if len(env) > 1:
             name = env[0]
@@ -81,8 +54,8 @@ def substituteArgs(args, command):
             if "$" in command:
                 try:
                     yamlLoc = os.path.join(os.path.join(reportsDir,"prepenv"),"appruntime.yaml")
-                    #print "YAML file: " + yamlLoc
-                    #print os.listdir(os.path.join(reportsDir,"prepenv"))
+                    logging.info("YAML file: " + yamlLoc)
+                    logging.info(os.listdir(os.path.join(reportsDir,"prepenv")))
 
                     with open(yamlLoc, 'r') as stream:
                         try:
@@ -98,9 +71,9 @@ def substituteArgs(args, command):
                                 if item.lower() in command.lower():
                                     command = command.replace("$" + item, config[item])
                         except yaml.YAMLError as exc:
-                            print(exc)
+                            logging.warning(exc)
                 except Exception as e:
-                    print "YAML prep file not found, skipping. Detail: " + str(e)
+                    logging.info("YAML prep file not found, skipping. Detail: " + str(e))
     return command
 
 def slugify(s):
@@ -109,7 +82,7 @@ def slugify(s):
     """
     valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
     filename = ''.join(c for c in s if c in valid_chars)
-    filename = filename.replace(' ','_') # I don't like spaces in filenames.
+    filename = filename.replace(' ','_')
     return filename
 
 def reportName(toolName, reportString):
@@ -129,11 +102,11 @@ def reportName(toolName, reportString):
 
 def checkFolderPath(toolName):
     #Create a directory to store the reports / junit
-    folderName = slugify(toolName)
     if not os.path.exists(reportsDir):
         os.mkdir(reportsDir)
 
-    toolPath = os.path.join(reportsDir,folderName)
+    toolPath = os.path.join(reportsDir,slugify(toolName))
+
     if not os.path.exists(toolPath):
         os.mkdir(toolPath)
 
@@ -150,8 +123,9 @@ def getYamlConfig(toolName):
 
     return yamlLoc
 
-def executeTool(tool, profile_run, credentialedScan, test_mode):
-    yamlConfig = getYamlConfig(tool)
+def executeTool(toolName, profile_run, credentialedScan, test_mode):
+    logging.info("Tool: " + toolName)
+    yamlConfig = getYamlConfig(toolName)
 
     with open(yamlConfig, 'r') as stream:
         try:
@@ -164,7 +138,7 @@ def executeTool(tool, profile_run, credentialedScan, test_mode):
             config = yaml.safe_load(stream)
 
              #Set the object to the tool yaml section
-            tool = config[tool]
+            tool = config[toolName]
 
             #Tooling commands
             commands = tool["commands"]
@@ -176,22 +150,22 @@ def executeTool(tool, profile_run, credentialedScan, test_mode):
             #Launch only if command exists
             if profile_found and launchCmd:
                 if commands["report"] is not None:
-                    fullReportName = reportName(slugify(tool["name"]), commands["reportname"])
+                    fullReportName = reportName(slugify(toolName), commands["reportname"])
                     launchCmd = launchCmd + " " + commands["report"].replace("{reportname}", fullReportName)
 
                 #Only launch command if a launch command is specified
                 #Pre and post require a launch command
                 if launchCmd:
                     #Create a directory to store the reports
-                    checkFolderPath(tool["name"])
-                    print "created folder"
+                    checkFolderPath(toolName)
+                    logging.info("Created reports folder")
                     #Execute a pre-commmand, such as a setup or updated requirement
                     if commands["pre"] is not None:
                         if not test_mode:
                             preCommands = substituteArgs(remaining_argv, commands["pre"])
-                            print "*****************************"
-                            print "Pre-Launch: " + preCommands
-                            print "*****************************"
+                            logging.info("*****************************")
+                            logging.info("Pre-Launch: " + preCommands)
+                            logging.info("*****************************")
                             call(shlex.split(preCommands))
 
                     launchCmd = commands["exec"] + " " + launchCmd
@@ -202,29 +176,29 @@ def executeTool(tool, profile_run, credentialedScan, test_mode):
                             if credentialedScan in tool["credentials"]:
                                 launchCmd = launchCmd + " " + tool["credentials"][credentialedScan]
                             else:
-                                print "Credential profile not found."
+                                logging.warning("Credential profile not found.")
                         else:
-                            print "Credential command line option passed but no credential profile exists in config.yaml."
+                            logging.warning("Credential command line option passed but no credential profile exists in config.yaml.")
 
-                    print launchCmd
+                    logging.info(launchCmd)
                     #Substitute any environment variables
                     launchCmd = substituteArgs(remaining_argv, launchCmd)
-                    print "*****************************"
-                    print "Launch: " + launchCmd
+                    logging.info("*****************************")
+                    logging.info("Launch: " + launchCmd)
                     #print "Launch: " + base64.b64encode(launchCmd)
-                    print "*****************************"
+                    logging.info("*****************************")
                     #Check for any commands that have not been substituted and warn
                     if "$" in launchCmd:
-                        print "*****************************"
-                        print "Warning: Some commands haven't been substituted. Exiting."
-                        print launchCmd
-                        print "*****************************"
+                        logging.warning("*****************************")
+                        logging.info("Warning: Some commands haven't been substituted. Exiting.")
+                        logging.info(launchCmd)
+                        logging.info("*****************************")
                         sys.exit(1)
 
                     if not test_mode:
                         if "shell" in commands:
                             if commands["shell"] == True:
-                                print "Using shell call"
+                                logging.info("Using shell call")
                                 call(launchCmd, shell=True)
                             else:
                                 call(shlex.split(launchCmd))
@@ -236,9 +210,9 @@ def executeTool(tool, profile_run, credentialedScan, test_mode):
                         #Look into making this more flexible with dynamic substitution
                         postCmd = commands["post"]
                         postCmd = postCmd.replace("{reportname}", fullReportName)
-                        print "*****************************"
-                        print "Post Command: " + postCmd
-                        print "*****************************"
+                        logging.info("*****************************")
+                        logging.info("Post Command: " + postCmd)
+                        logging.info("*****************************")
                         if not test_mode:
                             #review and see what other options we have
                             call(postCmd, shell=True)
@@ -247,14 +221,14 @@ def executeTool(tool, profile_run, credentialedScan, test_mode):
                                 #Look into making this more flexible with dynamic substitution
                                 junitCmd = commands["junit"]
                                 junitCmd = junitCmd.replace("{reportname}", fullReportName)
-                                print "*****************************"
-                                print "Junit Command: " + junitCmd
-                                print "*****************************"
+                                logging.info("*****************************")
+                                logging.info("Junit Command: " + junitCmd)
+                                logging.info("*****************************")
                                 if not test_mode:
                                     #review and see what other options we have
                                     call(shlex.split(junitCmd))
             else:
-                print "Profile or command to run not found in Yaml configuration file."
+                logging.warning("Profile or command to run not found in Yaml configuration file.")
         except yaml.YAMLError as exc:
             print(exc)
 
@@ -267,6 +241,7 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--test", help="Run the command in test mode only, non-execution.", default=False)
     parser.add_argument("-f", "--runevery", help="Runs a runevery tool after each step, for example DefectDojo.", default=False)
     parser.add_argument("-fp", "--runevery-profile", help="runevery tool profile.", default=False)
+    parser.add_argument("-l", "--log", help="Logging level: debug, info, warning, error, critical", default="debug")
 
     args, remaining_argv = parser.parse_known_args()
 
@@ -294,6 +269,17 @@ if __name__ == '__main__':
 
     if args.tool:
         tool = args.tool
+
+    loglevel = args.log
+    numeric_level = getattr(logging, loglevel.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError('Invalid log level: %s' % loglevel)
+
+    logfile_dir = os.path.join(baseData,"logs")
+    if not os.path.exists(logfile_dir):
+        os.mkdir(logfile_dir)
+    logfile_name = os.path.join(logfile_dir,tool + ".log")
+    logging.basicConfig(filename=logfile_name, filemode="w", level=numeric_level)
 
     executeTool(tool, profile_run, credentialedScan, test_mode)
 
