@@ -18,7 +18,7 @@ checkmarx:
    - "CHECKMARX_PASSWORD"
   commands:
     pre:
-    exec: "python /usr/bin/appsecpipeline/tools/checkmarx/ScanProject.py --project=$PROJECT --source=$LOC"
+    exec: "python /usr/bin/appsecpipeline/tools/checkmarx/ScanProject.py --url $CHECKMARX_URL --username $CHECKMARX_USERNAME --password $CHECKMARX_PASSWORD --project=$CHECKMARX_PROJECT --source=$LOC"
     shell: False
     report: "--report {reportname}"
     reportname: "{timestamp}.xml"
