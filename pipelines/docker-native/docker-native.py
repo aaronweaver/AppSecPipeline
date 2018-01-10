@@ -146,7 +146,7 @@ def checkLanguages(containerName):
     #add try catch
     global langFile
     client = docker.APIClient(base_url='unix://var/run/docker.sock')
-    stream, stat = client.get_archive(containerName, "/var/appsecpipeline/reports/cloc/languages.json")
+    stream, stat = client.get_archive(containerName, "/opt/appsecpipeline/reports/cloc/languages.json")
 
     runId = str(uuid.uuid4())
     tarLangFile = "/tmp/" + runId + ".tar.gz"

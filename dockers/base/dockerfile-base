@@ -28,6 +28,9 @@ COPY tools /usr/bin/appsecpipeline/tools
 RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
 RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
 
+#Checkmarx install
+RUN pip install -r /usr/bin/appsecpipeline/tools/checkmarx/requirements.txt
+
 RUN useradd -m jenkins -u 1000
 
 RUN mkdir /home/jenkins/.ssh/

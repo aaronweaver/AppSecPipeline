@@ -8,6 +8,8 @@ profiles:
         profile: "clone"
       - tool: "cloc"
         profile: "all"
+      - tool: "checkmarx"
+        profile: "all"
       - tool: "bandit"
         profile: "tuned"
       - tool: "brakeman"

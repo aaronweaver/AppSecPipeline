@@ -11,19 +11,17 @@ checkmarx:
   documentation: https://checkmarx.atlassian.net/wiki/spaces/KC/overview
   docker: appsecpipeline/base
   parameters:
-   - "URL"
-   - "USERNAME"
-   - "PASSWORD"
-   - "ADMIN-USERNAME"
-   - "ADMIN-PASSWORD"
-   - "CLIENT"
-   - "RUN-SCAN-POLL"
+   - "LOC"
+   - "CHECKMARX_PROJECT"
+   - "CHECKMARX_URL"
+   - "CHECKMARX_USERNAME"
+   - "CHECKMARX_PASSWORD"
   commands:
     pre:
-    exec: "python /usr/bin/appsecpipeline/tools/appspider/AppSpider.py --url $url --username $username --password $password --admin-username $admin-username --admin-password $admin-password --client $client"
+    exec: "python /usr/bin/appsecpipeline/tools/checkmarx/ScanProject.py --project=$PROJECT --source=$LOC"
     shell: False
-    report: "--output-file='{reportname}'"
-    reportname: "VulnerabilitiesSummary.xml"
+    report: "--report {reportname}"
+    reportname: "{timestamp}.xml"
     post:
     junit:
   languages:
@@ -45,12 +43,4 @@ checkmarx:
     - "scala"
     - "swift"
   profiles:
-    all: "--run-scan-poll $run-scan-poll"
-    active: "--checks=active/*"
-    passive: "--checks=passive/*"
-    fast: "--audit-forms --checks=xss --scope-page-limit=1"
-    file_upload: "--checks=form_upload"
-    xss: "--checks=xss"
-    remote: "--checks=file_inclusion"
-    command_exec: "--checks=os_cmd_injection"
-    sqli: "--checks=sql_injection"
+    all: " "
