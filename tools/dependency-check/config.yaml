@@ -8,17 +8,21 @@ dependency-check:
   url: https://www.owasp.org/index.php/OWASP_Dependency_Check
   documentation: https://jeremylong.github.io/DependencyCheck/
   parameters:
-   - "LOC"
-   - "PROJECT"
+    LOC:
+      type: runtime
+      data_type: string
+      description: "Location of the source code."
+    PROJECT:
+      type: runtime
+      data_type: string
+      description: "Name of the Dependency project."
   commands:
-    parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
     pre:
     exec: "/usr/bin/dependency-check/bin/dependency-check.sh"
     shell: False
     post:
     report: "--out {reportname} --format XML"
     reportname: "{timestamp}.xml"
-    post:
     junit:
   languages:
     - "java"

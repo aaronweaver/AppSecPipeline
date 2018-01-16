@@ -8,7 +8,10 @@ retirejs:
   url: https://retirejs.github.io/retire.js/
   documentation: https://github.com/RetireJS/retire.js
   parameters:
-   - "LOC"
+    LOC:
+      type: runtime
+      data_type: string
+      description: "Location of the source code."
   commands:
     pre:
     exec: "retire"
@@ -16,7 +19,6 @@ retirejs:
     post:
     report: "--outputpath {reportname} --outputformat json"
     reportname: "{timestamp}.json"
-    post:
     junit:
   languages:
     - "javascript"

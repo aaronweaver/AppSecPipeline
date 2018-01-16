@@ -229,17 +229,17 @@ class PyCheckmarx(object):
 		inc = 0
 		while inc < self.ttlReport:
 			inc += 1
-			status = self.client.service.GetStatusOfSingleScan(self.sessionId, RunId)
 
-			if not status.IsSuccesfull:
-				raise Exception("Unable to get data from the server.")
+			try:
+				status = self.client.service.GetStatusOfSingleScan(self.sessionId, RunId)
 
-			if status.CurrentStatus == "Finished":
-				ScanId = status.ScanId
-				break
+				if status.CurrentStatus == "Finished":
+					ScanId = status.ScanId
+					break
 
-			if self.DEBUG:
-				print "fail"
+			except Exception as e:
+				print e
+
 			print "Waiting for Checkmarx to complete."
 			time.sleep(self.timeWaitReport)
 

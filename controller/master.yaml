@@ -57,15 +57,20 @@ profiles:
    - tool: "ssllabs"
      profile: "all"
 
+  tenableio:
+    pipeline:
+     - tool: "tenableio"
+       profile: "all"
+
   wpscan:
-   - tool: "wpscan"
-     profile: "all_enumeration"
+    pipeline:
+     - tool: "wpscan"
+       profile: "all_enumeration"
 
   nmap:
-   - tool: "nmap"
-     profile: "quick"
-   - tool: "defectdojo"
-     profile: "all"
+    pipeline:
+     - tool: "nmap"
+       profile: "quick"
 
   defectdojo:
    - tool: "defectdojo"

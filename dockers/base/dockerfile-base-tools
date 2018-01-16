@@ -24,6 +24,8 @@ RUN pip install -U requests
 RUN pip install -U junit_xml_output
 RUN pip install defectdojo_api
 
+#Tenable
+RUN pip install -U tenable_io
 RUN mkdir /usr/bin/appsecpipeline/
 ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
 COPY tools /usr/bin/appsecpipeline/tools

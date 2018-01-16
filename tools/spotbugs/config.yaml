@@ -8,7 +8,10 @@ spotbugs:
   url: https://spotbugs.github.io/
   documentation: http://spotbugs-in-kengo-toda.readthedocs.io/en/latest/index.html
   parameters:
-   - "LOC"
+    LOC:
+      type: runtime
+      data_type: string
+      description: "Location of the source code."
   commands:
     parameters: "COMPILE_LOC : Location of jar file. LOC=/temp/jar"
     pre:
@@ -17,7 +20,6 @@ spotbugs:
     post:
     report: "-xml -output {reportname} $COMPILE_LOC"
     reportname: "{timestamp}.xml"
-    post:
     junit:
   languages:
     - "java"

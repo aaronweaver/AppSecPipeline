@@ -8,16 +8,17 @@ brakeman:
   url: https://brakemanscanner.org/
   documentation: https://brakemanscanner.org/docs/
   parameters:
-   - "LOC"
+    LOC:
+      type: runtime
+      data_type: string
+      description: "Location of the source code."
   commands:
-    parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
     pre:
     exec: "brakeman -p $LOC --no-pager"
     shell: False
     post:
     report: "-o {reportname}"
     reportname: "{timestamp}.json"
-    post:
     junit:
   languages:
     - "ruby"

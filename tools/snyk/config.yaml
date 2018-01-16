@@ -8,7 +8,14 @@ snyk:
   url: https://snyk.io/
   documentation: https://snyk.io/docs/
   parameters:
-   - "SNYK_API_TOKEN"
+    LOC:
+      type: runtime
+      data_type: string
+      description: "Location of the source code."
+    SNYK_API_TOKEN:
+      type: config
+      data_type: api
+      description: "Synk API token"
   commands:
     pre: "snyk auth $SNYK_API_TOKEN"
     exec: "snyk"
@@ -16,7 +23,6 @@ snyk:
     post:
     report: "--json > {reportname}"
     reportname: "{timestamp}.json"
-    post:
     junit:
   languages:
     - "ruby"

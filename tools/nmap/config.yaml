@@ -11,7 +11,10 @@ nmap:
   documentation: https://nmap.org/book/man.html
   docker: "appsecpipeline/base-tools"
   parameters:
-   - "TARGET"
+    TARGET:
+      type: runtime
+      data_type: host
+      description: "Target hostname of the site to scan."
   commands:
     pre:
     exec: "nmap"

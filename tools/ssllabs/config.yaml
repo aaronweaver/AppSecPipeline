@@ -11,7 +11,10 @@ ssllabs:
   documentation: https://sourceforge.net/p/ssllabs/mailman/ssllabs-devel/
   docker: "appsecpipeline/base-tools"
   parameters:
-   - "URL"
+    URL:
+      type: runtime
+      data_type: url
+      description: "URL of the site to scan."
   commands:
     pre:
     exec: "ssllabs-scan"

@@ -11,7 +11,10 @@ wpscan:
   documentation: https://github.com/wpscanteam/wpscan
   docker: "appsecpipeline/base-tools"
   parameters:
-   - "URL"
+    URL:
+      type: runtime
+      data_type: url
+      description: "URL of the site to scan."
   commands:
     pre:
     exec: "wpscan --url $URL"

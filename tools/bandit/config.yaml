@@ -9,9 +9,11 @@ bandit:
   url: https://wiki.openstack.org/wiki/Security/Projects/Bandit
   documentation: https://docs.openstack.org/bandit/latest/index.html
   parameters:
-   - "LOC"
+    LOC:
+      type: runtime
+      data_type: string
+      description: "Location of the source code."
   commands:
-    parameters: "LOC : File or folder location of source code to examine. LOC=/temp/code"
     pre:
     exec: "bandit"
     shell: True

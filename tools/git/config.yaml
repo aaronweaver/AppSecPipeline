@@ -8,17 +8,21 @@ git:
   url: https://git-scm.com/
   documentation: https://git-scm.com/docs/git
   parameters:
-   - "GIT_URL"
-   - "GIT_DEST"
+    GIT_URL:
+      type: runtime
+      data_type: url
+      description: "URL of the source code repository."
+    GIT_DEST:
+      type: runtime
+      data_type: string
+      description: "Destination of the source code."
   commands:
-    parameters: "dir : Directory of security tool output."
     pre:
     exec: "git"
     shell: False
     post:
     report:
     reportname:
-    post:
     junit:
   profiles:
     clone: "clone $GIT_URL $GIT_DEST"

@@ -11,11 +11,26 @@ arachni:
   documentation: https://github.com/Arachni/arachni/wiki/Command-line-user-interface
   docker: "appsecpipeline/base-tools"
   parameters:
-   - "URL"
-   - "LOGIN_URL"
-   - "LOGIN_PARMS"
-   - "LOGIN_SUCCESS"
-   - "LOGIN_LOGOUT_PATTERN"
+    URL:
+      type: runtime
+      data_type: url
+      description: "URL of host to scan."
+    LOGIN_URL:
+      type: runtime
+      data_type: url
+      description: "Login URL of host to scan."
+    LOGIN_PARMS:
+      type: runtime
+      data_type: string
+      description: "Login paramaters in the format of username=user&password=password."
+    LOGIN_SUCCESS:
+      type: runtime
+      data_type: string
+      description: "Succesful login text to match on."
+    LOGIN_LOGOUT_PATTERN:
+      type: runtime
+      data_type: string
+      description: "Logout text to avoid."
   commands:
     pre:
     exec: "arachni $URL"

@@ -11,11 +11,26 @@ checkmarx:
   documentation: https://checkmarx.atlassian.net/wiki/spaces/KC/overview
   docker: appsecpipeline/base
   parameters:
-   - "LOC"
-   - "CHECKMARX_PROJECT"
-   - "CHECKMARX_URL"
-   - "CHECKMARX_USERNAME"
-   - "CHECKMARX_PASSWORD"
+    LOC:
+      type: runtime
+      data_type: string
+      description: "Location of the source code."
+    CHECKMARX_PROJECT:
+      type: runtime
+      data_type: int
+      description: "Checkmarx Project ID"
+    CHECKMARX_URL:
+      type: config
+      data_type: url
+      description: "Checkmarx web URL."
+    CHECKMARX_USERNAME:
+      type: config
+      data_type: username
+      description: "Checkmarx username."
+    CHECKMARX_PASSWORD:
+      type: config
+      data_type: password
+      description: "Checkmarx password."
   commands:
     pre:
     exec: "python /usr/bin/appsecpipeline/tools/checkmarx/ScanProject.py --url $CHECKMARX_URL --username $CHECKMARX_USERNAME --password $CHECKMARX_PASSWORD --project=$CHECKMARX_PROJECT --source=$LOC"

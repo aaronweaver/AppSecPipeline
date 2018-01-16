@@ -11,7 +11,10 @@ nikto:
   documentation: https://cirt.net/nikto2-docs/
   docker: "appsecpipeline/base-tools"
   parameters:
-   - "URL"
+    URL:
+      type: runtime
+      data_type: url
+      description: "URL of the site to scan."
   commands:
     pre:
     exec: "nikto -h $URL"
