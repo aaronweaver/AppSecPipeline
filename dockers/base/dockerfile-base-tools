@@ -34,7 +34,7 @@ COPY tools /usr/bin/appsecpipeline/tools
 RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
 RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
 
-RUN useradd -o -u 1000 jenkins
+RUN useradd -m -d /home/jenkins jenkins -u 1000
 
 #Python dependency installs
 RUN pip install -U bandit

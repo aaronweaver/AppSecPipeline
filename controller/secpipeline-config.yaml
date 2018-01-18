@@ -358,10 +358,10 @@ git:
       type: runtime
       data_type: url
       description: "URL of the source code repository."
-    GIT_DEST:
+    LOC:
       type: runtime
       data_type: string
-      description: "Destination of the source code."
+      description: "Location of the source code."
   commands:
     pre:
     exec: "git"
@@ -371,7 +371,7 @@ git:
     reportname:
     junit:
   profiles:
-    clone: "clone $GIT_URL $GIT_DEST"
+    clone: "clone $GIT_URL $LOC"
 nikto:
   version: AppSecPipeline 0.5.0
   tags:

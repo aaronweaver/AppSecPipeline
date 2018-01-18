@@ -31,20 +31,21 @@ profiles:
         tool-profile: "all"
 
   standard:
-   - tool: "cloc"
-     tool-profile: "all"
-   - tool: "nikto"
-     tool-profile: "fast"
-   - tool: "arachni"
-     tool-profile: "xss"
-   - tool: "bandit"
-     tool-profile: "tuned"
-   - tool: "brakeman"
-     tool-profile: "tuned"
-   - tool: "retirejs"
-     tool-profile: "all"
-   - tool: "defectdojo"
-     tool-profile: "all"
+    pipeline:
+      - tool: "cloc"
+        tool-profile: "all"
+      - tool: "nikto"
+        tool-profile: "fast"
+      - tool: "arachni"
+        tool-profile: "xss"
+      - tool: "bandit"
+        tool-profile: "tuned"
+      - tool: "brakeman"
+        tool-profile: "tuned"
+      - tool: "retirejs"
+        tool-profile: "all"
+      - tool: "defectdojo"
+        tool-profile: "all"
 
   production:
     pipeline:

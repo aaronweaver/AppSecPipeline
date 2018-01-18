@@ -276,9 +276,10 @@ def toolLaunch(toolName, toolProfile, runeveryTool, runeveryProfile, reportsDir=
         toolArgs += substituteArgs(toolName, remaining_argv, command, authFile==authFile)
 
     dockerAuthLoc = None
+    
     if authFile and key:
         dockerAuthLoc = os.path.join(reportsDir, os.path.basename(authFile))
-        
+
     dockerCommand = getCommand(toolName, toolProfile, toolArgs, runeveryTool, runeveryProfile, authFile=dockerAuthLoc, key=key)
 
     createdVolumes = createVolumes(volumes, pipelineLaunchUID, reportsDir)
@@ -358,7 +359,7 @@ if __name__ == '__main__':
 
     #Copy Auth file to shared directory
     key = None
-    if authFile and key:
+    if authFile:
         getConfigPath(volumes, reportsDir, authFile, pipelineLaunchUID)
 
         #Fetch the key

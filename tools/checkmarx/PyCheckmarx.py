@@ -16,6 +16,7 @@ import time
 from zipfile import ZipFile
 import os
 import uuid
+import ssl
 
 class PyCheckmarx(object):
 
@@ -25,7 +26,7 @@ class PyCheckmarx(object):
 	errorLog = []
 	ttlReport = 50
 	timeWaitReport = 30
-
+	ssl._create_default_https_context = ssl._create_unverified_context
 	#
 	# Init Function
 	#
