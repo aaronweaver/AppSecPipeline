@@ -23,6 +23,13 @@ profiles:
       - tool: "defectdojo"
         tool-profile: "all"
 
+  gitcloc:
+    pipeline:
+      - tool: "git"
+        tool-profile: "clone"
+      - tool: "cloc"
+        tool-profile: "all"
+
   standard:
    - tool: "cloc"
      tool-profile: "all"

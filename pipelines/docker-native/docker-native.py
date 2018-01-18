@@ -158,7 +158,7 @@ def createUIDFolder(reportDir, volumeLocalPath, volumeDestPath):
         #Example: /local/directory/<guid>/
         #Mounts to: /dockerdir/reports
         volumeLocalPath = os.path.join(volumeLocalPath,pipelineLaunchUID)
-        
+
         if os.path.exists(volumeLocalPath) == False:
             os.mkdir(volumeLocalPath)
 
@@ -275,7 +275,10 @@ def toolLaunch(toolName, toolProfile, runeveryTool, runeveryProfile, reportsDir=
         command = "%s %s" % (toolruneveryDetails["profiles"][runeveryProfile], toolruneveryDetails["commands"]["exec"])
         toolArgs += substituteArgs(toolName, remaining_argv, command, authFile==authFile)
 
-    dockerAuthLoc = os.path.join(reportsDir, os.path.basename(authFile))
+    dockerAuthLoc = None
+    if authFile and key:
+        dockerAuthLoc = os.path.join(reportsDir, os.path.basename(authFile))
+        
     dockerCommand = getCommand(toolName, toolProfile, toolArgs, runeveryTool, runeveryProfile, authFile=dockerAuthLoc, key=key)
 
     createdVolumes = createVolumes(volumes, pipelineLaunchUID, reportsDir)
@@ -354,10 +357,12 @@ if __name__ == '__main__':
     pipelineLaunchUID = str(uuid.uuid4())
 
     #Copy Auth file to shared directory
-    getConfigPath(volumes, reportsDir, authFile, pipelineLaunchUID)
+    key = None
+    if authFile and key:
+        getConfigPath(volumes, reportsDir, authFile, pipelineLaunchUID)
 
-    #Fetch the key
-    key = getKey(keyFile)
+        #Fetch the key
+        key = getKey(keyFile)
 
     if sourceDir is not False:
         print getContainerName(pipelineLaunchUID, "setup")
