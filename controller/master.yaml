@@ -1,114 +1,124 @@
-version: AppSecPipeline 0.5.0
+version: AppSecPipeline 0.6.0
+
+# Global configuration settings
+global:
+  min-severity: low
 
 #Profile definition of what tools to run for a particular application
 profiles:
   sourcecode:
     pipeline:
       - tool: "git"
-        profile: "clone"
+        tool-profile: "clone"
       - tool: "cloc"
-        profile: "all"
+        tool-profile: "all"
       - tool: "checkmarx"
-        profile: "all"
+        tool-profile: "all"
       - tool: "bandit"
-        profile: "tuned"
+        tool-profile: "tuned"
       - tool: "brakeman"
-        profile: "tuned"
+        tool-profile: "tuned"
       - tool: "retirejs"
-        profile: "all"
+        tool-profile: "all"
       - tool: "defectdojo"
-        profile: "all"
+        tool-profile: "all"
 
   standard:
    - tool: "cloc"
-     profile: "all"
+     tool-profile: "all"
    - tool: "nikto"
-     profile: "fast"
+     tool-profile: "fast"
    - tool: "arachni"
-     profile: "xss"
+     tool-profile: "xss"
    - tool: "bandit"
-     profile: "tuned"
+     tool-profile: "tuned"
    - tool: "brakeman"
-     profile: "tuned"
+     tool-profile: "tuned"
    - tool: "retirejs"
-     profile: "all"
+     tool-profile: "all"
    - tool: "defectdojo"
-     profile: "all"
+     tool-profile: "all"
 
   production:
-    startup:
-      tool: prepenv
-      profile: all
-    runevery:
-      tool: defectdojo
-      profile: engagement
-    final:
-      tool: defectdojo
-      profile: close_engagement
     pipeline:
       - tool: "zap"
-        profile: "quick"
+        tool-profile: "quick"
       - tool: "nmap"
-        profile: "quick"
+        tool-profile: "quick"
       - tool: "ssllabs"
-        profile: "all"
+        tool-profile: "all"
+    startup:
+      tool: prepenv
+      tool-profile: all
+    runevery:
+      tool: defectdojo
+      tool-profile: engagement
+    final:
+      tool: defectdojo
+      tool-profile: close_engagement
 
   ssllabs:
-   - tool: "ssllabs"
-     profile: "all"
+    pipeline:
+     - tool: "ssllabs"
+       tool-profile: "all"
 
   tenableio:
     pipeline:
      - tool: "tenableio"
-       profile: "all"
+       tool-profile: "all"
 
   wpscan:
     pipeline:
      - tool: "wpscan"
-       profile: "all_enumeration"
+       tool-profile: "all_enumeration"
 
   nmap:
     pipeline:
      - tool: "nmap"
-       profile: "quick"
+       tool-profile: "quick"
+
+  defectdojonmap:
+    pipeline:
+     - tool: "nmap"
+       tool-profile: "quick"
+     - tool: "defectdojo"
+       tool-profile: "all"
 
   defectdojo:
-   - tool: "defectdojo"
-     profile: "all"
+    pipeline:
+     - tool: "defectdojo"
+       tool-profile: "all"
 
   dynamic:
-   - tool: "nikto"
-     profile: "tuned"
-   - tool: "arachni"
-     profile: "xss"
-   - tool: "defectdojo"
-     profile: "all"
+    pipeline:
+     - tool: "nikto"
+       tool-profile: "tuned"
+     - tool: "arachni"
+       tool-profile: "xss"
+     - tool: "defectdojo"
+       tool-profile: "all"
 
   static:
-   - tool: "cloc"
-     profile: "all"
-   - tool: "bandit"
-     profile: "tuned"
-   - tool: "brakeman"
-     profile: "tuned"
-   - tool: "retirejs"
-     profile: "all"
-     finding-severity: #Only import issues from retireJs with a severity of Critical
-       - "Critical"
-   - tool: "snyk"
-     profile: "all"
-   - tool: "dependency-check"
-     profile: "all"
-   - tool: "defectdojo"
-     profile: "all"
+    pipeline:
+     - tool: "cloc"
+       tool-profile: "all"
+     - tool: "bandit"
+       tool-profile: "tuned"
+     - tool: "brakeman"
+       tool-profile: "tuned"
+     - tool: "retirejs"
+       tool-profile: "all"
+     - tool: "snyk"
+       tool-profile: "all"
+     - tool: "dependency-check"
+       tool-profile: "all"
+     - tool: "defectdojo"
+       tool-profile: "all"
 
   analyze-code:
-   - tool: "cloc"
-     profile: "all"
-
-#Global Import issue threshold, minimum severity
-finding-severity:
-  - "Medium"
+    pipeline:
+     - tool: "cloc"
+       tool-profile: "all"
 
 #Define which profile to run based off of a code checkin
 deployment:

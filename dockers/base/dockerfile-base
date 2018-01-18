@@ -19,7 +19,8 @@ RUN apt-get update \
 RUN pip install -U pyyaml
 RUN pip install -U requests
 RUN pip install -U junit_xml_output
-RUN pip install defectdojo_api
+RUN pip install -U defectdojo_api
+RUN pip install -U cryptography
 
 RUN mkdir /usr/bin/appsecpipeline/
 ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"

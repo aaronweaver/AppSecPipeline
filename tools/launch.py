@@ -16,14 +16,51 @@ import uuid
 from subprocess import call
 from datetime import datetime
 import base64
+from cryptography.fernet import Fernet
 
 baseLocation = "/usr/bin/appsecpipeline/"
 baseData = "/opt/appsecpipeline/"
+
 reportsDir = os.path.join(baseData,"reports")
+
+def getYamlConfig(toolName):
+    #Expecting config file in tools/<toolname>/config.yaml
+    yamlLoc = os.path.join(baseLocation, "tools",toolName,"config.yaml")
+
+    if not os.path.exists(yamlLoc):
+        raise RuntimeError("Tool config does not exist. Checked in: " + yamlLoc)
+
+    return yamlLoc
+
+def getParameterAttribs(toolName, command, authFile, key):
+    with open(authFile, 'r') as stream:
+        try:
+            #Tool configuration
+            config = yaml.safe_load(stream)
+
+            #Load the key
+            f = Fernet(key)
+
+            if toolName in config:
+                #Set the object to the tool yaml section
+                tool = config[toolName]
+                toolParms = tool["parameters"]
+                for parameter in toolParms:
+                    if parameter in command:
+                        command = command.replace("$" + parameter, f.decrypt(toolParms[parameter]["value"]))
+
+        except yaml.YAMLError as exc:
+            logging.warning(exc)
+
+    return command
 
 #Allow for dynamic arguments to support a wide variety of tools
 #Format URL=Value, YAML Definition for substitution $URL
-def substituteArgs(args, command):
+def substituteArgs(args, command, toolName, authFile=None, key=None):
+    #Replace tool credential settings if a tool config yaml exists
+    if authFile and key:
+        command = getParameterAttribs(toolName, command, authFile, key)
+
     for arg in args:
         #print "Arguments: "
         #print arg
@@ -41,6 +78,7 @@ def substituteArgs(args, command):
             print command.lower()
             """
             if name.lower() in command.lower():
+
                 if name.startswith('--'):
                     name = name.replace("--","", 1)
 
@@ -48,7 +86,7 @@ def substituteArgs(args, command):
                     name = name.replace("-","", 1)
 
                 command = command.replace("$" + name, value)
-                #print "Command replaced: " + command
+                print "Command replaced: " + command
 
             #Check if any command haven't been replaced and see if it's the app runtime config
             if "$" in command:
@@ -114,16 +152,7 @@ def checkFolderPath(toolName):
     if not os.path.exists(junitPath):
         os.mkdir(junitPath)
 
-def getYamlConfig(toolName):
-    #Expecting config file in tools/toolname/config.yaml
-    yamlLoc = os.path.join(baseLocation, "tools",toolName,"config.yaml")
-
-    if not os.path.exists(yamlLoc):
-        raise RuntimeError("Tool config does not exist. Checked in: " + yamlLoc)
-
-    return yamlLoc
-
-def executeTool(toolName, profile_run, credentialedScan, test_mode):
+def executeTool(toolName, profile_run, credentialedScan, test_mode, auth=None, key=None):
     logging.info("Tool: " + toolName)
     yamlConfig = getYamlConfig(toolName)
 
@@ -162,7 +191,7 @@ def executeTool(toolName, profile_run, credentialedScan, test_mode):
                     #Execute a pre-commmand, such as a setup or updated requirement
                     if commands["pre"] is not None:
                         if not test_mode:
-                            preCommands = substituteArgs(remaining_argv, commands["pre"])
+                            preCommands = substituteArgs(remaining_argv, commands["pre"], toolName, auth, key)
                             logging.info("*****************************")
                             logging.info("Pre-Launch: " + preCommands)
                             logging.info("*****************************")
@@ -182,7 +211,7 @@ def executeTool(toolName, profile_run, credentialedScan, test_mode):
 
                     logging.info(launchCmd)
                     #Substitute any environment variables
-                    launchCmd = substituteArgs(remaining_argv, launchCmd)
+                    launchCmd = substituteArgs(remaining_argv, launchCmd, toolName, auth, key)
                     logging.info("*****************************")
                     logging.info("Launch: " + launchCmd)
                     #print "Launch: " + base64.b64encode(launchCmd)
@@ -242,6 +271,8 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--runevery", help="Runs a runevery tool after each step, for example DefectDojo.", default=False)
     parser.add_argument("-fp", "--runevery-profile", help="runevery tool profile.", default=False)
     parser.add_argument("-l", "--log", help="Logging level: debug, info, warning, error, critical", default="debug")
+    parser.add_argument("-a", "--auth", help="Tool configuration credentials and or API keys.", required=False, default=None)
+    parser.add_argument("-k", "--key", help="Key for decrypting configuration. (string)", default=None)
 
     args, remaining_argv = parser.parse_known_args()
 
@@ -281,7 +312,7 @@ if __name__ == '__main__':
     logfile_name = os.path.join(logfile_dir,tool + ".log")
     logging.basicConfig(filename=logfile_name, filemode="w", level=numeric_level)
 
-    executeTool(tool, profile_run, credentialedScan, test_mode)
+    executeTool(tool, profile_run, credentialedScan, test_mode, args.auth, args.key)
 
     if runeveryTool is not None:
-        executeTool(runeveryTool, runeveryProfile, False, test_mode)
+        executeTool(runeveryTool, runeveryProfile, False, test_mode, args.auth, args.key)

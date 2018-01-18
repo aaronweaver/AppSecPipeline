@@ -17,6 +17,7 @@ RUN pip install pyyaml
 RUN pip install requests
 RUN pip install junit_xml_output
 RUN pip install defectdojo_api
+RUN pip install -U cryptography
 
 #Copy pipeline executor to bin
 RUN mkdir /usr/bin/appsecpipeline/
