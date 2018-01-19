@@ -149,8 +149,8 @@ if __name__ == '__main__':
         }
 
     #Authenticate
-    appspider = PyAppSpider.PyAppSpider(url, debug=False, proxies=proxies)
-    admin_appspider = PyAppSpider.PyAppSpider(url, debug=False, proxies=proxies)
+    appspider = PyAppSpider.PyAppSpider(url, debug=False, proxies=proxies, verify_ssl=False)
+    admin_appspider = PyAppSpider.PyAppSpider(url, debug=False, proxies=proxies, verify_ssl=False)
     authenticated = appspider.authenticate(username, password)
 
     #If admin credentials are specified

@@ -11,14 +11,18 @@ appspider:
   documentation: https://appspider.help.rapid7.com/docs/
   docker: appsecpipeline/base
   parameters:
-    URL:
-      type: runtime
-      data_type: url
-      description: "URL of host to scan."
     APPSPIDER_RUN_SCAN_POLL:
       type: runtime
       data_type: bool
       description: "Should the script poll AppSpider to wait for the scan to finish."
+    APPSPIDER_CLIENT:
+      type: runtime
+      data_type: string
+      description: "AppSpider Client to use for connecting to the API."
+    APPSPIDER_URL:
+      type: config
+      data_type: url
+      description: "AppSpider Enterprise URL."
     APPSPIDER_USERNAME:
       type: config
       data_type: username
@@ -35,13 +39,9 @@ appspider:
       type: config
       data_type: password
       description: "AppSpider Admin API Password"
-    APPSPIDER_CLIENT:
-      type: config
-      data_type: string
-      description: "AppSpider Client to use for connecting to the API."
   commands:
     pre:
-    exec: "python /usr/bin/appsecpipeline/tools/appspider/AppSpider.py --url $url --username $APPSPIDER_USERNAME --password $APPSPIDER_PASSWORD --admin-username $APPSPIDER_ADMIN_USERNAME --admin-password $APPSPIDER_ADMIN_PASSWORD --client $APPSPIDER_CLIENT"
+    exec: "python /usr/bin/appsecpipeline/tools/appspider/AppSpider.py --url $APPSPIDER_URL --username $APPSPIDER_USERNAME --password $APPSPIDER_PASSWORD --admin-username $APPSPIDER_ADMIN_USERNAME --admin-password $APPSPIDER_ADMIN_PASSWORD --client $APPSPIDER_CLIENT"
     shell: False
     report: "--output-file='{reportname}'"
     reportname: "VulnerabilitiesSummary.xml"

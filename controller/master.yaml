@@ -92,6 +92,11 @@ profiles:
      - tool: "defectdojo"
        tool-profile: "all"
 
+  appspider:
+    pipeline:
+     - tool: "appspider"
+       tool-profile: "all"
+
   defectdojo:
     pipeline:
      - tool: "defectdojo"
