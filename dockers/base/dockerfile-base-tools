@@ -18,28 +18,21 @@ RUN apt-get update \
     unzip \
     nmap
 
-#Python dependency installs
-RUN pip install -U pyyaml
-RUN pip install -U requests
-RUN pip install -U junit_xml_output
-RUN pip install defectdojo_api
-RUN pip install -U cryptography
-
-#Tenable
-RUN pip install -U tenable_io
-RUN mkdir /usr/bin/appsecpipeline/
-ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
+########## AppSecPipeline Install ##########
 COPY tools /usr/bin/appsecpipeline/tools
+COPY dockers/base/setupdocker.sh /tmp
+ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
+RUN sh /tmp/setupdocker.sh
+RUN rm /tmp/setupdocker.sh
 
-RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
-RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
+########## Tenable Install ##########
+RUN pip install -U tenable_io
 
-RUN useradd -m -d /home/jenkins jenkins -u 1000
-
-#Python dependency installs
+########## Bandit Install ##########
 RUN pip install -U bandit
 
-#Install Arachni, packaged apt-get install arachni doesn't work for some reason, hangs on BrowserCluster
+########## Arachni Install ##########
+#Install Arachni, packaged apt-get install Arachni doesn't work for some reason, hangs on BrowserCluster
 ARG VERSION=1.5.1
 ARG WEB_VERSION=0.5.12
 
@@ -52,14 +45,16 @@ RUN echo '#!/bin/bash\n\ncd /usr/share/arachni/bin/ && ./arachni_reporter "$@"' 
 RUN chmod +x /usr/bin/arachni
 RUN chmod +x /usr/bin/arachni_reporter
 
-#Install SSLLabs Scanner
+#For Arachni to run properly the appsecpipeline user needs write permissions on component cache
+RUN chown -R appsecpipeline: /usr/share/arachni/system/
+
+########## SSLLabs Scanner Install ##########
 ARG SSLLAB=1.4.0
 
 RUN wget -qO- https://github.com/ssllabs/ssllabs-scan/releases/download/v${SSLLAB}/ssllabs-scan_${SSLLAB}-linux64.tgz | tar xvz -C /usr/bin --strip-components=1
 
-#Jenkins user need write permissions on component cache
-RUN chown -R jenkins: /usr/share/arachni/system/
-USER jenkins
+########## Change to appsecpipeline user ##########
+USER appsecpipeline
 
 ENTRYPOINT ["launch.py"]
 

@@ -2,9 +2,6 @@ FROM kalilinux/kali-linux-docker
 
 ENV DEBIAN_FRONTEND noninteractive
 
-COPY tools /usr/bin/appsecpipeline/tools
-COPY dockers/base/setupdocker.sh /tmp
-
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y \
@@ -18,10 +15,14 @@ RUN apt-get update \
     openjdk-9-jre-headless \
     nmap
 
+########## AppSecPipeline Install ##########
+COPY tools /usr/bin/appsecpipeline/tools
+COPY dockers/base/setupdocker.sh /tmp
+ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
 RUN sh /tmp/setupdocker.sh
 RUN rm /tmp/setupdocker.sh
 
-#Checkmarx install
+########## Checkmarx Install ##########
 RUN pip install -r /usr/bin/appsecpipeline/tools/checkmarx/requirements.txt
 
 ENTRYPOINT ["launch.py"]

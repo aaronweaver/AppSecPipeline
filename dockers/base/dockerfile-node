@@ -10,27 +10,18 @@ RUN apt-get update \
     python2.7 \
     python2.7-dev
 
-#Install Retire.js
+########## AppSecPipeline Install ##########
+COPY tools /usr/bin/appsecpipeline/tools
+COPY dockers/base/setupdocker.sh /tmp
+ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
+RUN sh /tmp/setupdocker.sh
+RUN rm /tmp/setupdocker.sh
+    
+########## Retire.js Install ##########
 RUN npm install -g retire
 
-#Install Synk
+########## Install Synk Install ##########
 RUN npm install -g snyk
-
-#Python dependency installs
-RUN pip install pyyaml
-RUN pip install requests
-RUN pip install junit_xml_output
-RUN pip install defectdojo_api
-RUN pip install -U cryptography
-
-RUN mkdir /usr/bin/appsecpipeline/
-ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
-COPY tools /usr/bin/appsecpipeline/tools
-
-RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
-RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
-
-RUN useradd -o -u 1000 jenkins
 
 ENTRYPOINT ["launch.py"]
 

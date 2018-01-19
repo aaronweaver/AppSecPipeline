@@ -15,26 +15,17 @@ RUN apt-get update \
     cloc \
     unzip
 
-#Python dependency installs
-RUN pip install -U pyyaml
-RUN pip install -U requests
-RUN pip install -U junit_xml_output
-RUN pip install defectdojo_api
-RUN pip install -U cryptography
-
-RUN mkdir /usr/bin/appsecpipeline/
-ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
+########## AppSecPipeline Install ##########
 COPY tools /usr/bin/appsecpipeline/tools
+COPY dockers/base/setupdocker.sh /tmp
+ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
+RUN sh /tmp/setupdocker.sh
+RUN rm /tmp/setupdocker.sh
 
-RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
-RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
-
-RUN useradd -o -u 1000 jenkins
-
-#Python dependency installs
+########## Bandit Install ##########
 RUN pip install -U bandit
 
-#Install dependency checker
+########## Dependency Checker Install ##########
 RUN wget -O /tmp/dependency-check.zip https://bintray.com/jeremy-long/owasp/download_file?file_path=dependency-check-3.0.2-release.zip && \
     unzip /tmp/dependency-check.zip -d /usr/bin/ && \
     rm /tmp/dependency-check.zip
@@ -42,11 +33,12 @@ RUN wget -O /tmp/dependency-check.zip https://bintray.com/jeremy-long/owasp/down
 #Update the NVD local database for dependency checker
 RUN /usr/bin/dependency-check/bin/dependency-check.sh --updateonly
 
-RUN chown -R jenkins: /usr/bin/dependency-check
+RUN chown -R appsecpipeline: /usr/bin/dependency-check
+
 #Dependency check needs write permission on the data directory
 RUN chmod -R u=rwx /usr/bin/dependency-check/data
 
-USER jenkins
+USER appsecpipeline
 
 ENTRYPOINT ["launch.py"]
 

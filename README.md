@@ -2,6 +2,19 @@
 
 Docker integration with Jenkins Pipeline to automate your application security pipeline.
 
+### AppSecPipeline Command Line
+
+set python path:
+```
+export PYTHONPATH=/path/to/AppSecPipeline/:$PYTHONPATH
+```
+
+Run an nmap scan:
+```
+cd /pipelines/docker-native/
+python docker-native.py -p nmap TARGET=bodgeit -v /tmp/AppSecPipelineReports:/opt/appsecpipeline/ -r /tmp/appsecpipeline/
+```
+
 ### Docker Build
 
 Build the Jenkins Docker

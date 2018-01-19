@@ -7,28 +7,27 @@ RUN apt-get update \
     && apt-get install -y \
     build-essential \
     ca-certificates \
-    git \
     python-pip \
     python2.7 \
     python2.7-dev
 
-#Python dependency installs
-RUN pip install pyyaml
-RUN pip install requests
-RUN pip install junit_xml_output
-RUN pip install defectdojo_api
-RUN pip install -U cryptography
-
-#Copy pipeline executor to bin
-RUN mkdir /usr/bin/appsecpipeline/
-ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
+########## AppSecPipeline Install ##########
 COPY tools /usr/bin/appsecpipeline/tools
-COPY tools/zap/zap-baseline.py /zap/
+ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
+
+#Python dependency installs
+RUN pip install -U requests
+RUN pip install -U junit_xml_output
+RUN pip install -U defectdojo_api
+RUN pip install -U cryptography
 
 RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
 RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
 
-#RUN useradd -o -u 1000 jenkins
+########## Zap Baseline Install ##########
+#Override the baseline zap python script
+COPY tools/zap/zap-baseline.py /zap/
+
 RUN usermod -u 1000 zap
 RUN groupmod -g 1000 zap
 
