@@ -2,6 +2,9 @@ FROM kalilinux/kali-linux-docker
 
 ENV DEBIAN_FRONTEND noninteractive
 
+COPY tools /usr/bin/appsecpipeline/tools
+COPY dockers/base/setupdocker.sh /tmp
+
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y \
@@ -15,27 +18,11 @@ RUN apt-get update \
     openjdk-9-jre-headless \
     nmap
 
-#Python dependency installs
-RUN pip install -U pyyaml
-RUN pip install -U requests
-RUN pip install -U junit_xml_output
-RUN pip install -U defectdojo_api
-RUN pip install -U cryptography
-
-RUN mkdir /usr/bin/appsecpipeline/
-ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
-COPY tools /usr/bin/appsecpipeline/tools
-
-RUN chmod +x /usr/bin/appsecpipeline/tools/launch.py
-RUN chmod +x /usr/bin/appsecpipeline/tools/junit.py
+RUN sh /tmp/setupdocker.sh
+RUN rm /tmp/setupdocker.sh
 
 #Checkmarx install
 RUN pip install -r /usr/bin/appsecpipeline/tools/checkmarx/requirements.txt
-
-RUN useradd -m -d /home/jenkins jenkins -u 1000
-
-RUN mkdir /home/jenkins/.ssh/
-RUN chmod 700 /home/jenkins/.ssh/
 
 ENTRYPOINT ["launch.py"]
 
