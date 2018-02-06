@@ -12,11 +12,14 @@ import json
 import requests
 import sys
 from shutil import copyfile
+from cryptography.fernet import Fernet
 
 class AppSecPipeline(object):
     """AppSecPipeline."""
 
-    def __init__(self, profile, report, toolargs, volume=None, auth=None, key=None, dir=None, test=False, clean=True, slack=None):
+    def __init__(self, profile, report, toolargs, volume=None, auth=None,
+        key=None, dir=None, test=False, clean=True, slack=None, masterYamlFile=None,
+        toolYamlFile=None, pipelineLaunchUID=None):
         """Initialize an AppSecPipeline instance.
 
         :param profile: The pipeline profile to run from master.yaml
@@ -44,23 +47,33 @@ class AppSecPipeline(object):
         self.langFile = None
         self.client = docker.from_env()
         self.lowLevelclient = docker.APIClient(base_url='unix://var/run/docker.sock')
-        #docker.APIClient(base_url='unix://var/run/docker.sock')
-        self.pipelineLaunchUID = str(uuid.uuid4())
         self.color = 0
         self.tcolors = ('\033[90m', '\033[93m', '\033[94m', '\033[95m', '\033[96m', '\033[33m', '\033[34m', '\033[35m', '\033[36m')
         self.ENDC = '\033[0m'
         self.slack = slack
 
-    def runPipeline(self):
-        foundProfile = False
-        profile = self.profile
-        volumes = self.volume
-        reportsDir = self.report
-        authFile = self.auth
-        key = self.key
+        if pipelineLaunchUID is None:
+            self.pipelineLaunchUID = str(uuid.uuid4())
+        else:
+            self.pipelineLaunchUID = pipelineLaunchUID
 
-        masterYaml = self.getYamlConfig("master.yaml")
-        toolYaml = self.getYamlConfig("secpipeline-config.yaml")
+        if masterYamlFile is None:
+            self.masterYamlFile = "../../controller/master.yaml"
+        else:
+            self.masterYamlFile = masterYamlFile
+
+        if toolYamlFile is None:
+            self.toolYamlFile = "../../controller/secpipeline-config.yaml"
+        else:
+            self.toolYamlFile = toolYamlFile
+
+    def runPipeline(self):
+        pipelineDataRun = {}
+        runeveryTool = None
+        runeveryProfile = None
+
+        masterYaml = self.getYamlConfig(self.masterYamlFile)
+        toolYaml = self.getYamlConfig(self.toolYamlFile)
 
         #Validates that a docker network exists named appsecpipeline
         self.checkNetwork()
@@ -68,7 +81,7 @@ class AppSecPipeline(object):
         #If a encrypted auth file exists the copy the file to the reports directory in the docker container
         key = None
         if self.auth:
-            self.getConfigPath(volumes, reportsDir, authFile)
+            self.getConfigPath(self.volume, self.report, self.auth)
 
             #Fetch the key
             key = self.getKey(self.key)
@@ -77,62 +90,47 @@ class AppSecPipeline(object):
         sourceContainer = None
         if self.dir is not False:
             print self.getContainerName("setup")
-            print "Copying folder: %s to /var/appsecpipeline" % sourceDir
+            print "Copying folder: %s to /opt/appsecpipeline" % sourceDir
             #Start a container for copying the folder
-            sourceContainer = self.launchContainer(client, "appsecpipeline/base", "setup", "/bin/bash", tty=True, volumePath=volumeMount, authFile=authFile)
+            sourceContainer = self.launchContainer(client, "appsecpipeline/base", "setup", "/bin/bash", tty=True,
+            volumePath=volumeMount, authFile=authFile)
             copytoContainer(self.getContainerName("setup"), sourceDir, "/opt/appsecpipeline")
             #Stop the setup container
             self.lowLevelclient.stop(container=appsec.getContainerName("setup"))
 
-        if self.slack:
-            slackTxt = "Security Pipeline Scan for: " + appsec.substituteArgs(None, self.toolargs, "", "URL", authFile=None)
-            appsec.chatAlert("*Starting:* " + slackTxt)
-
-        runeveryTool = None
-        runeveryProfile = None
-        finalTool = None
-        finalProfile = None
-
         #Select the profile from the master profile file and iterate through the data
         if self.profile in masterYaml["profiles"]:
-            foundProfile = True
-            #Startup tool that is run ahead of all other tools in the pipeline
-            if "startup" in masterYaml["profiles"][profile]:
-                startupTool = masterYaml["profiles"][profile]["startup"]["tool"]
-                startupProfile = masterYaml["profiles"][profile]["startup"]["profile"]
-                volume = self.toolLaunch(toolYaml, startupTool, startupProfile, self.toolargs, None, None, volumes=volumes, reportsDir=reportsDir, authFile=authFile, key=key)
-
             #Tool that is run after every tool, for example running defectdojo to push reports after the tool has completed
-            if "runevery" in masterYaml["profiles"][profile]:
-                runeveryTool = masterYaml["profiles"][profile]["runevery"]["tool"]
-                runeveryProfile = masterYaml["profiles"][profile]["runevery"]["profile"]
+            if "runevery" in masterYaml["profiles"][self.profile]:
+                runeveryTool = masterYaml["profiles"][self.profile]["runevery"]["tool"]
+                runeveryProfile = masterYaml["profiles"][self.profile]["runevery"]["tool-profile"]
 
-            #Final tool that is run in the pipeline
-            if "final" in masterYaml["profiles"][profile]:
-                finalTool = masterYaml["profiles"][profile]["final"]["tool"]
-                finalProfile = masterYaml["profiles"][profile]["final"]["profile"]
+            #Startup tool(s) that are run ahead of all other tools in the pipeline
+            self.generatePipeline("startup", masterYaml, toolYaml, pipelineDataRun, runeveryTool, runeveryProfile, key)
 
-            finalPipelineTool = self.pipelineTools(masterYaml["profiles"][profile]["pipeline"])
+            #Pipeline tool(s)
+            self.generatePipeline("pipeline", masterYaml, toolYaml, pipelineDataRun, runeveryTool, runeveryProfile, key)
 
-            #Iterate through the tools in the pipeline
-            for tool in masterYaml["profiles"][profile]["pipeline"]:
-                toolName = tool['tool']
-                toolProfile = tool['tool-profile']
+            #Final tool(s) that are run in the pipeline
+            self.generatePipeline("final", masterYaml, toolYaml, pipelineDataRun, runeveryTool, runeveryProfile, key)
 
-                volume = self.toolLaunch(toolYaml, toolName, toolProfile, self.toolargs, runeveryTool, runeveryProfile, volumes=volumes, reportsDir=reportsDir, authFile=authFile, key=key)
+        return pipelineDataRun
 
-                #Final command on pipeline
-                if toolName == finalPipelineTool and finalTool is not None:
-                    volume = self.toolLaunch(toolYaml, finalTool, finalProfile, self.toolargs, None, None, volumes=volumes, reportsDir=reportsDir, authFile=authFile, key=key)
+    def generatePipeline(self, pipelinePosition, masterYaml, toolYaml, pipelineDataRun, runeveryTool, runeveryProfile, key):
+        counter = 0
 
-            #Clean up docker containers and volumes
-            if self.clean:
-                self.cleanUpDocker(sourceContainer)
+        if pipelinePosition in masterYaml["profiles"][self.profile]:
+            for tool in masterYaml["profiles"][self.profile][pipelinePosition]:
+                startupTool = tool["tool"]
+                startupProfile = tool["tool-profile"]
 
-            if self.slack:
-                self.chatAlert("*Complete:* " + slackTxt)
+                toolRun = self.toolLaunch(toolYaml, startupTool, startupProfile, self.toolargs,
+                runeveryTool, runeveryProfile, volumes=self.volume, reportsDir=self.report, authFile=self.auth,
+                key=key, pipelinePosition=pipelinePosition)
 
-        return foundProfile
+                toolRun.update({"runOrder":counter})
+                pipelineDataRun.update({uuid.uuid4():toolRun})
+                counter = counter + 1
 
     def cleanUpDocker(self, sourceContainer):
 
@@ -185,12 +183,12 @@ class AppSecPipeline(object):
     def getYamlConfig(self, yamlFile):
         yamlConfig = None
         #Expecting config file in tools/toolname/config.yaml
-        yamlLoc = os.path.join(self.baseLocation, yamlFile)
+        #yamlLoc = os.path.join(self.baseLocation, yamlFile)
 
-        if not os.path.exists(yamlLoc):
-            raise RuntimeError("Tool config does not exist. Checked in: " + yamlLoc)
+        if not os.path.exists(yamlFile):
+            raise RuntimeError("Tool config does not exist. Checked in: " + yamlFile)
 
-        with open(yamlLoc, 'r') as stream:
+        with open(yamlFile, 'r') as stream:
             try:
 
                 yamlConfig = yaml.safe_load(stream)
@@ -201,7 +199,9 @@ class AppSecPipeline(object):
         return yamlConfig
 
     def launcherControl(self, client, docker, tool, command, toolProfile, volumes=None):
+        launchData = {}
         runContainer = False
+
         #Check tool profile (dynamic/static/code-analyzer)
         toolType = toolProfile["type"]
 
@@ -218,13 +218,9 @@ class AppSecPipeline(object):
         else:
             runContainer = True
 
-        if runContainer:
-            self.launchContainer(client, docker, tool, command, volumes=volumes)
-        else:
-            print "Skipped  %s" % (tool)
+        launchData = {"tool":tool, "toolType": toolType, "docker": docker, "command": command, "volumes": volumes}
 
-        if toolType == "code-analyzer":
-            self.checkLanguages(self.getContainerName(tool))
+        return launchData
 
     def launchContainer(self, client, docker, tool, command, tty=False, volumes=None):
         #Container Launch
@@ -232,12 +228,14 @@ class AppSecPipeline(object):
 
         print "Launch Command: %s" % command
 
-        container = client.containers.run(docker, command, network='appsecpipeline_default',
-        name=containerName, labels=["appsecpipeline",self.pipelineLaunchUID],
-        detach=True, volumes=volumes, tty=tty, user=1000)
+        #container = client.containers.run(docker, command, network='appsecpipeline_default',
+        #name=containerName, labels=["appsecpipeline",self.pipelineLaunchUID],
+        #detach=True, volumes=volumes, tty=tty, user=1000)
         #working_dir='/var/appsecpipeline',
 
-        print "\033[95mContainer Info: %s %s\nContainer Name: %s with a Container ID of %s" % (docker, self.ENDC, containerName, container.id)
+        #print "\033[95mContainer Info: %s %s\nContainer Name: %s with a Container ID of %s" % (docker,
+        #self.ENDC, containerName, container.id)
+        tty = True
 
         #if tty don't wait for logs as it will "hang"
         if tty == False:
@@ -247,7 +245,33 @@ class AppSecPipeline(object):
                 self.color = self.color + 1
             else:
                 self.color = 0
-        return container
+
+        #return container
+
+    def launchContainerDirect(self, client, docker, tool, command, tty=False, volumes=None):
+        #Container Launch
+        containerName = self.getContainerName(tool)
+
+        print "Launch Command: %s" % command
+
+        container = client.containers.run(docker, command, network='appsecpipeline_default',
+        name=containerName, labels=["appsecpipeline",self.pipelineLaunchUID],
+        detach=True, volumes=volumes, tty=tty, user=1000, auto_remove=True)
+
+        #print "\033[95mContainer Info: %s %s\nContainer Name: %s with a Container ID of %s" % (docker,
+        #self.ENDC, containerName, container.id)
+        tty = True
+
+        #if tty don't wait for logs as it will "hang"
+        if tty == False:
+            for line in container.logs(stream=True):
+                print self.tcolors[self.color] + tool.ljust(15) + " | \033[0m " + line.strip()
+            if self.color < len(self.tcolors):
+                self.color = self.color + 1
+            else:
+                self.color = 0
+
+        return container.id
 
     def createVolumes(self, volumes, reportDir):
         volumeCount = 1
@@ -305,19 +329,28 @@ class AppSecPipeline(object):
     def deleteVolume(self, volume):
         return volume.remove()
 
+    def getToolInfo(self, tool):
+        toolYaml = self.getYamlConfig(self.toolYamlFile)
+        return toolYaml[tool]
+
     def checkToolLanguage(self, toolLanguage):
-        global langFile
         langFound = False
-        for language in toolLanguage:
-            if language.lower() in langFile:
-                langFound = True
-                exit
+        reportsDir = self.getConfigPath(self.volume, self.report, self.auth)
+        languageFullPath = os.path.join(reportsDir, self.pipelineLaunchUID, "reports/cloc/languages.json")
+
+        if os.path.exists(languageFullPath):
+            f = open(languageFullPath,"r")
+            langFile = f.read()
+            f.close
+            langFound = False
+            for language in toolLanguage:
+                if language.lower() in langFile.lower():
+                    langFound = True
+                    exit
 
         return langFound
 
     def checkLanguages(self, containerName):
-        #add try catch
-        global langFile
         client = docker.APIClient(base_url='unix://var/run/docker.sock')
 
         try:
@@ -338,7 +371,7 @@ class AppSecPipeline(object):
         tar.close()
 
         with open(os.path.join(targetDirectory,"languages.json"), 'r') as f:
-            langFile = f.read().lower()
+            self.langFile = f.read().lower()
 
         os.remove(tarLangFile)
         shutil.rmtree(targetDirectory)
@@ -363,27 +396,13 @@ class AppSecPipeline(object):
         appNetwork = client.networks.list(networkName)
 
         if len(appNetwork) == 0:
-            print "Creating network: %s" % networkName
+            #print "Creating network: %s" % networkName
             createNetwork(networkName)
-        else:
-            print "Network exists: %s " % networkName
+        #else:
+        #    print "Network exists: %s " % networkName
 
     def createNetwork(self, networkName):
         client.networks.create(networkName, driver="bridge")
-
-    def slackAlert(self, **kwargs):
-        slack_web_hook = self.slack
-
-        payload_json = json.dumps(kwargs)
-        webhook_url = "https://hooks.slack.com/services/%s" % slack_web_hook
-
-        response = requests.post(
-            webhook_url, data=payload_json,
-            headers={'Content-Type': 'application/json'}
-        )
-
-    def chatAlert(self, text):
-        self.slackAlert(text=text, channel="#security-appsec", username="AppSecPipeline", icon_emoji=":secret:")
 
     def getCommand(self, toolName, profile, commands, runeveryTool, runeveryProfile, authFile=None, key=None):
         command = "-t %s -p %s %s" % (toolName, profile, commands)
@@ -395,16 +414,16 @@ class AppSecPipeline(object):
             command += " --runevery %s --runevery-profile %s" % (runeveryTool, runeveryProfile)
         return command
 
-    def toolLaunch(self, toolYaml, toolName, toolProfile, remaining_argv, runeveryTool, runeveryProfile, reportsDir=None, volumes=None, authFile=None, key=None):
-        self.chatAlert(">>>*Executing:* " + toolName)
+    def toolLaunch(self, toolYaml, toolName, toolProfile, remaining_argv, runeveryTool, runeveryProfile,
+        reportsDir=None, volumes=None, authFile=None, key=None, pipelinePosition=None):
 
-        print "***** Tool Details *****"
+        #print "***** Tool Details *****"
         toolDetails = toolYaml[toolName]
         command = "%s %s" % (toolDetails["profiles"][toolProfile], toolDetails["commands"]["exec"])
         toolArgs = self.substituteArgs(toolName, remaining_argv, command, authFile=authFile)
 
         if runeveryTool is not None:
-            print "***** runevery Tool Details *****"
+            #print "***** runevery Tool Details *****"
             toolruneveryDetails = toolYaml[runeveryTool]
             command = "%s %s" % (toolruneveryDetails["profiles"][runeveryProfile], toolruneveryDetails["commands"]["exec"])
             toolArgs += self.substituteArgs(toolName, remaining_argv, command, authFile==authFile)
@@ -418,21 +437,8 @@ class AppSecPipeline(object):
 
         createdVolumes = self.createVolumes(volumes, reportsDir)
 
-        self.launcherControl(self.client, toolDetails["docker"], toolName, dockerCommand, toolDetails, volumes=createdVolumes)
-
-        return volumes
-
-    def pipelineTools(self, pipelineTools):
-        self.chatAlert("*Tools that will be run:* ")
-        appSecPipeline = ""
-        toolName = None
-        for tool in pipelineTools:
-            toolName = tool['tool']
-            appSecPipeline += toolName + ", "
-
-        self.chatAlert(">>>*AppSecPipeline:* " + appSecPipeline[:-2])
-
-        return toolName
+        return {"tool":toolName, "toolType": toolDetails["type"], "pipelinePosition": pipelinePosition,
+        "docker": toolDetails["docker"], "command": dockerCommand, "volumes": volumes}
 
     def getConfigPath(self, volumes, reportsDir, configFile):
         filename = None
@@ -457,3 +463,25 @@ class AppSecPipeline(object):
         key = keyFile.read()
         keyFile.close
         return key
+
+    def getParameterAttribs(self, toolName, authFile, key):
+        tool = None
+        with open(authFile, 'r') as stream:
+            try:
+                #Tool configuration
+                config = yaml.safe_load(stream)
+
+                #Load the key
+                f = Fernet(key)
+
+                if toolName in config:
+                    #Set the object to the tool yaml section
+                    tool = config[toolName]
+                    toolParms = tool["parameters"]
+                    for parameter in toolParms:
+                        toolParms[parameter]["value"] = f.decrypt(toolParms[parameter]["value"])
+
+            except yaml.YAMLError as exc:
+                logging.warning(exc)
+
+        return tool

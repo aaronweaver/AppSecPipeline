@@ -16,9 +16,13 @@ git:
       type: runtime
       data_type: string
       description: "Location of the source code."
+    GIT_TAGS:
+      type: runtime
+      data_type: string
+      description: "Checkout a specified tag or branch."
   commands:
     pre:
-    exec: "git"
+    exec: "sh /usr/bin/appsecpipeline/tools/git/git.sh"
     shell: False
     post:
     report:
@@ -26,3 +30,4 @@ git:
     junit:
   profiles:
     clone: "clone $GIT_URL $LOC"
+    tags: "tag $GIT_URL $LOC $GIT_TAGS"

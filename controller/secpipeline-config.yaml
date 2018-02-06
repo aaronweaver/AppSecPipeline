@@ -1,5 +1,6 @@
 appspider:
   version: AppSecPipeline 0.5.0
+  tool-version: 3.8
   tags:
     - "Dynamic Scanner"
   type: "dynamic"
@@ -9,16 +10,20 @@ appspider:
   description: "AppSpider automatically finds vulnerabilities across a wide range of applications from the relatively simple to the most complex—and it includes unique capabilities that enable teams to automate more of the security testing program across the entire software development lifecycle, from creation through production."
   url: https://www.rapid7.com/products/appspider/
   documentation: https://appspider.help.rapid7.com/docs/
-  docker: appsecpipeline/base
+  docker: "appsecpipeline/base:latest"
   parameters:
-    URL:
-      type: runtime
-      data_type: url
-      description: "URL of host to scan."
     APPSPIDER_RUN_SCAN_POLL:
       type: runtime
       data_type: bool
-      description: "Should the script poll AppSpider to wait for the scan to finish."
+      description: "Wait for the scan to complete and specify the AppSpider profile."
+    APPSPIDER_CLIENT:
+      type: runtime
+      data_type: string
+      description: "AppSpider Client to use for connecting to the API."
+    APPSPIDER_URL:
+      type: config
+      data_type: url
+      description: "AppSpider Enterprise URL."
     APPSPIDER_USERNAME:
       type: config
       data_type: username
@@ -35,13 +40,9 @@ appspider:
       type: config
       data_type: password
       description: "AppSpider Admin API Password"
-    APPSPIDER_CLIENT:
-      type: config
-      data_type: string
-      description: "AppSpider Client to use for connecting to the API."
   commands:
     pre:
-    exec: "python /usr/bin/appsecpipeline/tools/appspider/AppSpider.py --url $url --username $APPSPIDER_USERNAME --password $APPSPIDER_PASSWORD --admin-username $APPSPIDER_ADMIN_USERNAME --admin-password $APPSPIDER_ADMIN_PASSWORD --client $APPSPIDER_CLIENT"
+    exec: "python /usr/bin/appsecpipeline/tools/appspider/AppSpider.py --url $APPSPIDER_URL --username $APPSPIDER_USERNAME --password $APPSPIDER_PASSWORD --admin-username $APPSPIDER_ADMIN_USERNAME --admin-password $APPSPIDER_ADMIN_PASSWORD --client $APPSPIDER_CLIENT"
     shell: False
     report: "--output-file='{reportname}'"
     reportname: "VulnerabilitiesSummary.xml"
@@ -59,6 +60,7 @@ appspider:
     sqli: "--checks=sql_injection"
 arachni:
   version: AppSecPipeline 0.5.0
+  tool-version:
   tags:
     - "Dyanmic Scanner"
   type: "dynamic"
@@ -68,7 +70,7 @@ arachni:
   description: "Arachni is a feature-full, modular, high-performance Ruby framework aimed towards helping penetration testers and administrators evaluate the security of modern web applications."
   url: http://www.arachni-scanner.com/
   documentation: https://github.com/Arachni/arachni/wiki/Command-line-user-interface
-  docker: "appsecpipeline/base-tools"
+  docker: "appsecpipeline/base-tools:latest"
   parameters:
     URL:
       type: runtime
@@ -112,12 +114,13 @@ arachni:
     sqli: "--checks=sql_injection"
 bandit:
   version: AppSecPipeline 0.5.0
+  tool-version:
   name: bandit
   tags:
     - "Static Code Analyzer"
   type: "static"
   description: "Bandit is a tool designed to find common security issues in Python code. To do this Bandit processes each file, builds an AST from it, and runs appropriate plugins against the AST nodes. Once Bandit has finished scanning all the files it generates a report."
-  docker: "appsecpipeline/base-tools"
+  docker: "appsecpipeline/base-tools:latest"
   url: https://wiki.openstack.org/wiki/Security/Projects/Bandit
   documentation: https://docs.openstack.org/bandit/latest/index.html
   parameters:
@@ -146,7 +149,7 @@ brakeman:
     - "Static Code Analyzer"
   type: "static"
   description: "Brakeman is an open source vulnerability scanner specifically designed for Ruby on Rails applications. It statically analyzes Rails application code to find security issues at any stage of development."
-  docker: "appsecpipeline/ruby"
+  docker: "appsecpipeline/ruby:latest"
   url: https://brakemanscanner.org/
   documentation: https://brakemanscanner.org/docs/
   parameters:
@@ -180,7 +183,7 @@ checkmarx:
   description: "Checkmarx is a source code analysis product that allows organization to scan uncompiled code and identify vulnerabilities."
   url: https://www.checkmarx.com/technology/static-code-analysis-sca/
   documentation: https://checkmarx.atlassian.net/wiki/spaces/KC/overview
-  docker: appsecpipeline/base
+  docker: appsecpipeline/sast
   parameters:
     LOC:
       type: runtime
@@ -362,9 +365,13 @@ git:
       type: runtime
       data_type: string
       description: "Location of the source code."
+    GIT_TAGS:
+      type: runtime
+      data_type: string
+      description: "Checkout a specified tag."
   commands:
     pre:
-    exec: "git"
+    exec: "sh git.sh"
     shell: False
     post:
     report:
@@ -372,6 +379,7 @@ git:
     junit:
   profiles:
     clone: "clone $GIT_URL $LOC"
+    tags: "$GIT_URL $LOC $GIT_TAGS"
 nikto:
   version: AppSecPipeline 0.5.0
   tags:

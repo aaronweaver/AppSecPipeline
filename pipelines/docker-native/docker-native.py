@@ -27,7 +27,8 @@ if __name__ == '__main__':
     test = args.test
     slack = args.slack
 
-    appsec = pipeline.AppSecPipeline(profile, reportsDir, remaining_argv, volume=volumes, auth=authFile, key=keyFile, dir=sourceDir, test=test, clean=cleanUp, slack=slack)
+    appsec = pipeline.AppSecPipeline(profile, reportsDir, remaining_argv, volume=volumes, auth=authFile,
+            key=keyFile, dir=sourceDir, test=test, clean=cleanUp, slack=slack)
 
     if appsec.runPipeline():
         print "**********************************************"

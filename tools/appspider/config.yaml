@@ -1,5 +1,6 @@
 appspider:
   version: AppSecPipeline 0.5.0
+  tool-version: 3.8
   tags:
     - "Dynamic Scanner"
   type: "dynamic"
@@ -9,12 +10,12 @@ appspider:
   description: "AppSpider automatically finds vulnerabilities across a wide range of applications from the relatively simple to the most complex—and it includes unique capabilities that enable teams to automate more of the security testing program across the entire software development lifecycle, from creation through production."
   url: https://www.rapid7.com/products/appspider/
   documentation: https://appspider.help.rapid7.com/docs/
-  docker: appsecpipeline/base
+  docker: "appsecpipeline/base:latest"
   parameters:
     APPSPIDER_RUN_SCAN_POLL:
       type: runtime
       data_type: bool
-      description: "Should the script poll AppSpider to wait for the scan to finish."
+      description: "Wait for the scan to complete and specify the AppSpider profile."
     APPSPIDER_CLIENT:
       type: runtime
       data_type: string
