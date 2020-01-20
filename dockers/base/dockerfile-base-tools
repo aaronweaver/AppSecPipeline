@@ -20,6 +20,8 @@ RUN apt-get update \
 
 ########## AppSecPipeline Install ##########
 COPY tools /usr/bin/appsecpipeline/tools
+RUN mkdir -p /opt/appsecpipeline/logs
+RUN mkdir -p /opt/appsecpipeline/reports
 COPY dockers/base/setupdocker.sh /tmp
 ENV PATH="/usr/bin/appsecpipeline/tools:${PATH}"
 RUN sh /tmp/setupdocker.sh
