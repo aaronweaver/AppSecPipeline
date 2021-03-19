@@ -1,4 +1,4 @@
-Jinja2==2.10
+Jinja2==2.11.3
 junit-xml==1.8
 junit-xml-output==1.0.3
 MarkupSafe==1.0
